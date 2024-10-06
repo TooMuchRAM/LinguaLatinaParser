@@ -88,6 +88,7 @@ export default class EIFWOBNFParser {
         const grammarTree = new GrammarTree(rootChildren[0][0]);
         grammarTree.nodeIndex = this.actions.nodeIndex;
         grammarTree.anywhereNodes = this.actions.anywhereNodes;
+        grammarTree.leaves = this.actions.leaves;
         return grammarTree;
     }
 }

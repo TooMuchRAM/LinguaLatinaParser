@@ -25,6 +25,7 @@ export default class ConstructGrammarTreeActions {
     private _infixes: { [name: string]: GTInfixNode } = {};
 
     public anywhereNodes: GTAnywhereNode[] = [];
+    public leaves: {[value: string]: GTTextLeaf[]} = {};
 
     public constructor() {
         this.reset();
@@ -33,6 +34,8 @@ export default class ConstructGrammarTreeActions {
     public reset() {
         this.nodeIndex = {};
         this._infixes = {};
+        this.anywhereNodes = [];
+        this.leaves = {};
     }
 
     private _newOrSeq(node: GTNode): GTNodeChildren {
@@ -388,7 +391,13 @@ export default class ConstructGrammarTreeActions {
     }
 
     Terminal(self: ConstructGrammarTreeActions, _: TerminalNode, value: NonterminalNode, _1: TerminalNode): GTNodeChildren {
-        return self._newOrSeq(new GTTextLeaf(value.sourceString));
+        const leaf = new GTTextLeaf(value.sourceString);
+        if (!self.leaves[value.sourceString]) {
+            self.leaves[value.sourceString] = [];
+        }
+        self.leaves[value.sourceString].push(leaf);
+
+        return self._newOrSeq(leaf);
     }
 
     anythingSelector(self: ConstructGrammarTreeActions, _: TerminalNode): GTNodeChildren {
