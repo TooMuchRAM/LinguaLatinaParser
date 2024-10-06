@@ -1,0 +1,26 @@
+EIFWOBNF {
+	Rules = Rules Rule -- head
+    	| Rule -- tail
+	Rule = Declaration | Initialisation
+    Initialisation = AnyNonTerminal ";"
+   	Declaration = AnyNonTerminal "::=" Conjunction ";"
+    Grouping = "(" Conjunction ")"
+    Conjunction = (Grouping | Composition) "|" Conjunction --head
+    	| (Grouping | Composition) --tail
+    Composition = (Clause|Grouping) "," Composition -- head
+    	| (Clause|Grouping) -- tail
+    Clause = ClauseRepeat | ClauseOptional | ClauseAnywhere | Unit
+    ClauseRepeat = "{" Conjunction "}"
+    ClauseOptional = "[" Conjunction "]"
+    ClauseAnywhere = ".." Conjunction ".."
+    Unit = NonTerminal | InfixNonTerminal | Terminal | anythingSelector
+    anythingSelector = "..."
+    AnyNonTerminal = NonTerminal | InfixNonTerminal
+    NonTerminal = #("<" name ">")
+    InfixNonTerminal = #("<" name "(") InfixParam ("," InfixParam)* ")>"
+    InfixParam = Terminal | NonTerminal
+    Terminal = quote name quote
+    name = word
+    word = letter*
+	quote = "'" | "\""
+}

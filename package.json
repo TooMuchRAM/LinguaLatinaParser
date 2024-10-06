@@ -1,0 +1,18 @@
+{
+  "name": "eifwobnf",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "generate": "ohm generateBundles --withTypes 'src/*/eifwobnf/*.ohm'"
+  },
+  "dependencies": {
+    "ohm-js": "^17.1.0"
+  },
+  "devDependencies": {
+    "@ohm-js/cli": "^2.0.0",
+    "typescript": "^5.5.3"
+  },
+  "private": true
+}
