@@ -2,17 +2,17 @@ EIFWOBNF {
 	Rules = Rules Rule -- head
     	| Rule -- tail
 	Rule = Declaration | Initialisation
-    Initialisation = AnyNonTerminal ";"
-   	Declaration = AnyNonTerminal "::=" Conjunction ";"
+    Declaration = AnyNonTerminal ";"
+   	Initialisation = AnyNonTerminal "::=" Conjunction ";"
     Grouping = "(" Conjunction ")"
     Conjunction = (Grouping | Composition) "|" Conjunction --head
     	| (Grouping | Composition) --tail
-    Composition = (Clause|Grouping) "," Composition -- head
-    	| (Clause|Grouping) -- tail
-    Clause = ClauseRepeat | ClauseOptional | ClauseAnywhere | Unit
-    ClauseRepeat = "{" Conjunction "}"
-    ClauseOptional = "[" Conjunction "]"
-    ClauseAnywhere = ".." Conjunction ".."
+    Composition = (Construct|Grouping) "," Composition -- head
+    	| (Construct|Grouping) -- tail
+    Construct = ConstructRepeat | ConstructOptional | ConstructAnywhere | Unit
+    ConstructRepeat = "{" Conjunction "}"
+    ConstructOptional = "[" Conjunction "]"
+    ConstructAnywhere = ".." Conjunction ".."
     Unit = NonTerminal | InfixNonTerminal | Terminal | anythingSelector
     anythingSelector = "..."
     AnyNonTerminal = NonTerminal | InfixNonTerminal

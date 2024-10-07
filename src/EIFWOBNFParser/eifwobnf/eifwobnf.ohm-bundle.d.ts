@@ -5,6 +5,7 @@ import {
   BaseActionDict,
   Grammar,
   IterationNode,
+  Node,
   NonterminalNode,
   Semantics,
   TerminalNode
@@ -15,8 +16,8 @@ export interface EIFWOBNFActionDict<T> extends BaseActionDict<T> {
   Rules_tail?: (this: NonterminalNode, arg0: NonterminalNode) => T;
   Rules?: (this: NonterminalNode, arg0: NonterminalNode) => T;
   Rule?: (this: NonterminalNode, arg0: NonterminalNode) => T;
-  Initialisation?: (this: NonterminalNode, arg0: NonterminalNode, arg1: TerminalNode) => T;
-  Declaration?: (this: NonterminalNode, arg0: NonterminalNode, arg1: TerminalNode, arg2: NonterminalNode, arg3: TerminalNode) => T;
+  Declaration?: (this: NonterminalNode, arg0: NonterminalNode, arg1: TerminalNode) => T;
+  Initialisation?: (this: NonterminalNode, arg0: NonterminalNode, arg1: TerminalNode, arg2: NonterminalNode, arg3: TerminalNode) => T;
   Grouping?: (this: NonterminalNode, arg0: TerminalNode, arg1: NonterminalNode, arg2: TerminalNode) => T;
   Conjunction_head?: (this: NonterminalNode, arg0: NonterminalNode, arg1: TerminalNode, arg2: NonterminalNode) => T;
   Conjunction_tail?: (this: NonterminalNode, arg0: NonterminalNode) => T;
@@ -24,10 +25,10 @@ export interface EIFWOBNFActionDict<T> extends BaseActionDict<T> {
   Composition_head?: (this: NonterminalNode, arg0: NonterminalNode, arg1: TerminalNode, arg2: NonterminalNode) => T;
   Composition_tail?: (this: NonterminalNode, arg0: NonterminalNode) => T;
   Composition?: (this: NonterminalNode, arg0: NonterminalNode) => T;
-  Clause?: (this: NonterminalNode, arg0: NonterminalNode) => T;
-  ClauseRepeat?: (this: NonterminalNode, arg0: TerminalNode, arg1: NonterminalNode, arg2: TerminalNode) => T;
-  ClauseOptional?: (this: NonterminalNode, arg0: TerminalNode, arg1: NonterminalNode, arg2: TerminalNode) => T;
-  ClauseAnywhere?: (this: NonterminalNode, arg0: TerminalNode, arg1: NonterminalNode, arg2: TerminalNode) => T;
+  Construct?: (this: NonterminalNode, arg0: NonterminalNode) => T;
+  ConstructRepeat?: (this: NonterminalNode, arg0: TerminalNode, arg1: NonterminalNode, arg2: TerminalNode) => T;
+  ConstructOptional?: (this: NonterminalNode, arg0: TerminalNode, arg1: NonterminalNode, arg2: TerminalNode) => T;
+  ConstructAnywhere?: (this: NonterminalNode, arg0: TerminalNode, arg1: NonterminalNode, arg2: TerminalNode) => T;
   Unit?: (this: NonterminalNode, arg0: NonterminalNode) => T;
   anythingSelector?: (this: NonterminalNode, arg0: TerminalNode) => T;
   AnyNonTerminal?: (this: NonterminalNode, arg0: NonterminalNode) => T;

@@ -11,7 +11,7 @@ import GTOptionalNode from "./GrammarTree/GTOptionalNode";
 import GTAnywhereNode from "./GrammarTree/GTAnywhereNode";
 import GTAnythingNode from "./GrammarTree/GTAnythingNode";
 import {NonterminalNode, TerminalNode} from "ohm-js";
-import GTClauseNode from "./GrammarTree/GTClauseNode";
+import GTConstructNode from "./GrammarTree/GTConstructNode";
 
 export default class ConstructGrammarTreeActions {
     public nodeIndex: { [id: string]: GTNode } = {};
@@ -55,8 +55,8 @@ export default class ConstructGrammarTreeActions {
             return seq.map((node): GTNode => {
                 if (node instanceof GTInfixNode || node instanceof GTFilledInfixNode) {
                     return callback(node);
-                } else if (node instanceof GTClauseNode && node.containsInfixNodes) {
-                    const newNode: GTClauseNode = new (Object.getPrototypeOf(node).constructor);
+                } else if (node instanceof GTConstructNode && node.containsInfixNodes) {
+                    const newNode: GTConstructNode = new (Object.getPrototypeOf(node).constructor);
                     newNode.children = self._mapInfixNodes(self, node.children!, callback);
                     self._setParentOnChildren(newNode.children, newNode);
                     return newNode;
@@ -80,7 +80,7 @@ export default class ConstructGrammarTreeActions {
         return declaration.constructGrammarTree();
     }
 
-    Initialisation(self: ConstructGrammarTreeActions, anyNonTerminal: NonterminalNode, _: TerminalNode): GTNodeChildren {
+    Declaration(self: ConstructGrammarTreeActions, anyNonTerminal: NonterminalNode, _: TerminalNode): GTNodeChildren {
         anyNonTerminal.constructGrammarTree();
         return new OR();
     }
@@ -223,7 +223,7 @@ export default class ConstructGrammarTreeActions {
         return Array.from(allNodes).map((node) => new SEQ(node));
     }
 
-    Declaration(
+    Initialisation(
         self: ConstructGrammarTreeActions,
         anyNonTerminal: NonterminalNode,
         _: TerminalNode,
@@ -254,44 +254,44 @@ export default class ConstructGrammarTreeActions {
         return [...groupOrComposition.constructGrammarTree(), ...conjunction.constructGrammarTree()];
     }
 
-    Composition_tail(self: ConstructGrammarTreeActions, clauseOrGrouping: NonterminalNode) {
-        return clauseOrGrouping.constructGrammarTree();
+    Composition_tail(self: ConstructGrammarTreeActions, ConstructOrGrouping: NonterminalNode) {
+        return ConstructOrGrouping.constructGrammarTree();
     }
 
-    Composition_head(self: ConstructGrammarTreeActions, clauseOrGrouping: NonterminalNode, _: TerminalNode, composition: NonterminalNode): GTNodeChildren {
-        const node: GTNodeChildren = clauseOrGrouping.constructGrammarTree();
+    Composition_head(self: ConstructGrammarTreeActions, ConstructOrGrouping: NonterminalNode, _: TerminalNode, composition: NonterminalNode): GTNodeChildren {
+        const node: GTNodeChildren = ConstructOrGrouping.constructGrammarTree();
         const compositionNode: GTNodeChildren = composition.constructGrammarTree();
         return compositionNode.map((seq) => {
             return new SEQ(node[0][0], ...seq);
         });
     }
 
-    Grouping(self: ConstructGrammarTreeActions, _1: TerminalNode, clause: NonterminalNode, _2: TerminalNode): GTNodeChildren {
-        return clause.constructGrammarTree();
+    Grouping(self: ConstructGrammarTreeActions, _1: TerminalNode, Construct: NonterminalNode, _2: TerminalNode): GTNodeChildren {
+        return Construct.constructGrammarTree();
     }
 
-    Clause(self: ConstructGrammarTreeActions, clause: NonterminalNode): GTNodeChildren {
-        return clause.constructGrammarTree();
+    Construct(self: ConstructGrammarTreeActions, Construct: NonterminalNode): GTNodeChildren {
+        return Construct.constructGrammarTree();
     }
 
-    ClauseRepeat(self: ConstructGrammarTreeActions, _1: TerminalNode, clause: NonterminalNode, _2: TerminalNode): GTNodeChildren {
-        const nodes: GTNodeChildren = clause.constructGrammarTree();
+    ConstructRepeat(self: ConstructGrammarTreeActions, _1: TerminalNode, Construct: NonterminalNode, _2: TerminalNode): GTNodeChildren {
+        const nodes: GTNodeChildren = Construct.constructGrammarTree();
         const repeatableNode = new GTRepeatableNode();
         repeatableNode.children = nodes;
         self._setParentOnChildren(nodes, repeatableNode);
         return self._newOrSeq(repeatableNode);
     }
 
-    ClauseOptional(self: ConstructGrammarTreeActions, _1: TerminalNode, clause: NonterminalNode, _2: TerminalNode): GTNodeChildren {
-        const nodes: GTNodeChildren = clause.constructGrammarTree();
+    ConstructOptional(self: ConstructGrammarTreeActions, _1: TerminalNode, Construct: NonterminalNode, _2: TerminalNode): GTNodeChildren {
+        const nodes: GTNodeChildren = Construct.constructGrammarTree();
         const optionalNode = new GTOptionalNode();
         optionalNode.children = nodes;
         self._setParentOnChildren(nodes, optionalNode);
         return self._newOrSeq(optionalNode);
     }
 
-    ClauseAnywhere(self: ConstructGrammarTreeActions, _1: TerminalNode, clause: NonterminalNode, _2: TerminalNode) {
-        const nodes: GTNodeChildren = clause.constructGrammarTree();
+    ConstructAnywhere(self: ConstructGrammarTreeActions, _1: TerminalNode, Construct: NonterminalNode, _2: TerminalNode) {
+        const nodes: GTNodeChildren = Construct.constructGrammarTree();
         const anywhereNode = new GTAnywhereNode();
         anywhereNode.children = nodes;
         self._setParentOnChildren(nodes, anywhereNode);

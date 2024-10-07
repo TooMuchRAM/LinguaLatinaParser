@@ -1,6 +1,6 @@
-import GTClauseNode from "./GTClauseNode";
+import GTConstructNode from "./GTConstructNode";
 
-export default class GTAnywhereNode extends GTClauseNode {
+export default class GTAnywhereNode extends GTConstructNode {
     constructor() {
         super("....");
     }

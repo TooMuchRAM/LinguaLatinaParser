@@ -23,11 +23,11 @@ export default class EIFWOBNFParser {
             Rule(arg0) {
                 return actions.Rule(actions, arg0)
             },
-            Initialisation(arg0, arg1) {
-                return actions.Initialisation(actions, arg0, arg1)
+            Declaration(arg0, arg1) {
+                return actions.Declaration(actions, arg0, arg1)
             },
-            Declaration(arg0, arg1, arg2, arg3) {
-                return actions.Declaration(actions, arg0, arg1, arg2, arg3)
+            Initialisation(arg0, arg1, arg2, arg3) {
+                return actions.Initialisation(actions, arg0, arg1, arg2, arg3)
             },
             Grouping(arg0, arg1, arg2) {
                 return actions.Grouping(actions, arg0, arg1, arg2)
@@ -44,17 +44,17 @@ export default class EIFWOBNFParser {
             Composition_tail(arg0) {
                 return actions.Composition_tail(actions, arg0)
             },
-            Clause(arg0) {
-                return actions.Clause(actions, arg0)
+            Construct(arg0) {
+                return actions.Construct(actions, arg0)
             },
-            ClauseRepeat(arg0, arg1, arg2) {
-                return actions.ClauseRepeat(actions, arg0, arg1, arg2)
+            ConstructRepeat(arg0, arg1, arg2) {
+                return actions.ConstructRepeat(actions, arg0, arg1, arg2)
             },
-            ClauseOptional(arg0, arg1, arg2) {
-                return actions.ClauseOptional(actions, arg0, arg1, arg2)
+            ConstructOptional(arg0, arg1, arg2) {
+                return actions.ConstructOptional(actions, arg0, arg1, arg2)
             },
-            ClauseAnywhere(arg0, arg1, arg2) {
-                return actions.ClauseAnywhere(actions, arg0, arg1, arg2)
+            ConstructAnywhere(arg0, arg1, arg2) {
+                return actions.ConstructAnywhere(actions, arg0, arg1, arg2)
             },
             anythingSelector(arg0) {
                 return actions.anythingSelector(actions, arg0)

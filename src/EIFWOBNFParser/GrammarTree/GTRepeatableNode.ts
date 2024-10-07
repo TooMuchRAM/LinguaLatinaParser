@@ -1,6 +1,6 @@
-import GTClauseNode from "./GTClauseNode";
+import GTConstructNode from "./GTConstructNode";
 
-export default class GTRepeatableNode extends GTClauseNode {
+export default class GTRepeatableNode extends GTConstructNode {
     constructor() {
         super("{}");
     }
