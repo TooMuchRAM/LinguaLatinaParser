@@ -29,7 +29,7 @@ export interface EIFWOBNFActionDict<T> extends BaseActionDict<T> {
   ConstructRepeat?: (this: NonterminalNode, arg0: TerminalNode, arg1: NonterminalNode, arg2: TerminalNode) => T;
   ConstructOptional?: (this: NonterminalNode, arg0: TerminalNode, arg1: NonterminalNode, arg2: TerminalNode) => T;
   ConstructAnywhere?: (this: NonterminalNode, arg0: TerminalNode, arg1: NonterminalNode, arg2: TerminalNode) => T;
-  Unit?: (this: NonterminalNode, arg0: NonterminalNode) => T;
+  Term?: (this: NonterminalNode, arg0: NonterminalNode) => T;
   anythingSelector?: (this: NonterminalNode, arg0: TerminalNode) => T;
   AnyNonTerminal?: (this: NonterminalNode, arg0: NonterminalNode) => T;
   NonTerminal?: (this: NonterminalNode, arg0: TerminalNode, arg1: NonterminalNode, arg2: TerminalNode) => T;

@@ -9,11 +9,11 @@ EIFWOBNF {
     	| (Grouping | Composition) --tail
     Composition = (Construct|Grouping) "," Composition -- head
     	| (Construct|Grouping) -- tail
-    Construct = ConstructRepeat | ConstructOptional | ConstructAnywhere | Unit
+    Construct = ConstructRepeat | ConstructOptional | ConstructAnywhere | Term
     ConstructRepeat = "{" Conjunction "}"
     ConstructOptional = "[" Conjunction "]"
     ConstructAnywhere = ".." Conjunction ".."
-    Unit = NonTerminal | AffixNonTerminal | Terminal | anythingSelector
+    Term = NonTerminal | AffixNonTerminal | Terminal | anythingSelector
     anythingSelector = "..."
     AnyNonTerminal = NonTerminal | AffixNonTerminal
     NonTerminal = #("<" name ">")
