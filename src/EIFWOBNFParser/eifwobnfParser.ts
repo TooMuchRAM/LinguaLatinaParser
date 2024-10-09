@@ -65,8 +65,8 @@ export default class EIFWOBNFParser {
             NonTerminal(arg0, arg1, arg2) {
                 return actions.NonTerminal(actions, arg0, arg1, arg2)
             },
-            InfixNonTerminal(arg0, arg1, arg2, arg3, arg4, arg5, arg6) {
-                return actions.InfixNonTerminal(actions, arg0, arg1, arg2, arg3, arg4, arg5, arg6)
+            AffixNonTerminal(arg0, arg1, arg2, arg3, arg4, arg5, arg6) {
+                return actions.AffixNonTerminal(actions, arg0, arg1, arg2, arg3, arg4, arg5, arg6)
             },
             Terminal(arg0, arg1, arg2) {
                 return actions.Terminal(actions, arg0, arg1, arg2)

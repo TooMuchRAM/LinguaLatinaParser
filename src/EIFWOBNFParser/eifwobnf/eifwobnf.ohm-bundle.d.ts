@@ -33,8 +33,8 @@ export interface EIFWOBNFActionDict<T> extends BaseActionDict<T> {
   anythingSelector?: (this: NonterminalNode, arg0: TerminalNode) => T;
   AnyNonTerminal?: (this: NonterminalNode, arg0: NonterminalNode) => T;
   NonTerminal?: (this: NonterminalNode, arg0: TerminalNode, arg1: NonterminalNode, arg2: TerminalNode) => T;
-  InfixNonTerminal?: (this: NonterminalNode, arg0: TerminalNode, arg1: NonterminalNode, arg2: TerminalNode, arg3: NonterminalNode, arg4: IterationNode, arg5: IterationNode, arg6: TerminalNode) => T;
-  InfixParam?: (this: NonterminalNode, arg0: NonterminalNode) => T;
+  AffixNonTerminal?: (this: NonterminalNode, arg0: TerminalNode, arg1: NonterminalNode, arg2: TerminalNode, arg3: NonterminalNode, arg4: IterationNode, arg5: IterationNode, arg6: TerminalNode) => T;
+  AffixParam?: (this: NonterminalNode, arg0: NonterminalNode) => T;
   Terminal?: (this: NonterminalNode, arg0: NonterminalNode, arg1: NonterminalNode, arg2: NonterminalNode) => T;
   name?: (this: NonterminalNode, arg0: NonterminalNode) => T;
   word?: (this: NonterminalNode, arg0: IterationNode) => T;

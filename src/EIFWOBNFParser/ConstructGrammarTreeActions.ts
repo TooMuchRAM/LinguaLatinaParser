@@ -1,9 +1,9 @@
 import GTNodeChildren from "./GrammarTree/GTNodeChildren";
 import GTNode from "./GrammarTree/GTNode";
-import GTInfixNode from "./GrammarTree/GTInfixNode";
+import GTAffixNode from "./GrammarTree/GTAffixNode";
 import OR from "./GrammarTree/OR";
 import SEQ from "./GrammarTree/SEQ";
-import GTFilledInfixNode from "./GrammarTree/GTFilledInfixNode";
+import GTFilledAffixNode from "./GrammarTree/GTFilledAffixNode";
 import GTTextLeaf from "./GrammarTree/GTTextLeaf";
 import {allPossibleCombinations} from "./utils";
 import GTRepeatableNode from "./GrammarTree/GTRepeatableNode";
@@ -16,13 +16,13 @@ import GTConstructNode from "./GrammarTree/GTConstructNode";
 export default class ConstructGrammarTreeActions {
     public nodeIndex: { [id: string]: GTNode } = {};
     /**
-     * Variable holding the infixes during parsing.
-     * the name is the name of the InfixNonTerminal,
+     * Variable holding the affixes during parsing.
+     * the name is the name of the AffixNonTerminal,
      * the list GTNode are the NonTerminals that describe
-     * the possible values of the infixes
+     * the possible values of the affixes
      * @private
      */
-    private _infixes: { [name: string]: GTInfixNode } = {};
+    private _affixes: { [name: string]: GTAffixNode } = {};
 
     public anywhereNodes: GTAnywhereNode[] = [];
     public leaves: {[value: string]: GTTextLeaf[]} = {};
@@ -33,7 +33,7 @@ export default class ConstructGrammarTreeActions {
 
     public reset() {
         this.nodeIndex = {};
-        this._infixes = {};
+        this._affixes = {};
         this.anywhereNodes = [];
         this.leaves = {};
     }
@@ -50,14 +50,14 @@ export default class ConstructGrammarTreeActions {
         });
     }
 
-    private _mapInfixNodes(self: ConstructGrammarTreeActions, nodeList: GTNodeChildren, callback: (node: GTInfixNode | GTFilledInfixNode) => GTNode): GTNodeChildren {
+    private _mapAffixNodes(self: ConstructGrammarTreeActions, nodeList: GTNodeChildren, callback: (node: GTAffixNode | GTFilledAffixNode) => GTNode): GTNodeChildren {
         return nodeList.map((seq): SEQ<GTNode> => {
             return seq.map((node): GTNode => {
-                if (node instanceof GTInfixNode || node instanceof GTFilledInfixNode) {
+                if (node instanceof GTAffixNode || node instanceof GTFilledAffixNode) {
                     return callback(node);
-                } else if (node instanceof GTConstructNode && node.containsInfixNodes) {
+                } else if (node instanceof GTConstructNode && node.containsAffixNodes) {
                     const newNode: GTConstructNode = new (Object.getPrototypeOf(node).constructor);
-                    newNode.children = self._mapInfixNodes(self, node.children!, callback);
+                    newNode.children = self._mapAffixNodes(self, node.children!, callback);
                     self._setParentOnChildren(newNode.children, newNode);
                     return newNode;
                 } else {
@@ -86,7 +86,7 @@ export default class ConstructGrammarTreeActions {
     }
 
     /**
-     * Get all parameters from all infix nodes contained in the list of nodes
+     * Get all parameters from all affix nodes contained in the list of nodes
      * @param self {ConstructGrammarTreeActions} - The instance of the ConstructGrammarTreeActions
      * @param nodeList {GTNodeChildren} - The list of nodes to get the parameters from
      * @returns {Set<GTNode>} - The set of parameters
@@ -94,13 +94,13 @@ export default class ConstructGrammarTreeActions {
      */
     private _getAllParameters(self: ConstructGrammarTreeActions, nodeList: GTNodeChildren): Set<GTNode> {
         const params: Set<GTNode> = new Set();
-        self._mapInfixNodes(self, nodeList, (node) => {
-            if (node instanceof GTInfixNode) {
+        self._mapAffixNodes(self, nodeList, (node) => {
+            if (node instanceof GTAffixNode) {
                 node.params.forEach((param) => {
                     params.add(param);
                 });
             } else {
-                node.infixNode.params.filter(
+                node.affixNode.params.filter(
                     (param) => !node.filledValues[param.name]
                 ).forEach((param) => {
                     params.add(param);
@@ -115,12 +115,12 @@ export default class ConstructGrammarTreeActions {
         const paramsToExpandArray = Array.from(parameters);
         const configurations: { [param: string]: string }[] = [];
         const possibleIndexCombinations = allPossibleCombinations(...paramsToExpandArray.map((param) => {
-            return param.childrenInfixStrings.length;
+            return param.childrenAffixStrings.length;
         }));
         for (const indexCombination of possibleIndexCombinations) {
             const configuration: { [param: string]: string } = {};
             for (let i = 0; i < indexCombination.length; i++) {
-                configuration[paramsToExpandArray[i].name] = paramsToExpandArray[i].childrenInfixStrings[indexCombination[i]];
+                configuration[paramsToExpandArray[i].name] = paramsToExpandArray[i].childrenAffixStrings[indexCombination[i]];
             }
             configurations.push(configuration);
         }
@@ -133,11 +133,11 @@ export default class ConstructGrammarTreeActions {
     } {
         return {
             configuration,
-            nodes: self._mapInfixNodes(self, nodeList, (node) => {
-                let filledNode: GTFilledInfixNode;
+            nodes: self._mapAffixNodes(self, nodeList, (node) => {
+                let filledNode: GTFilledAffixNode;
                 const changedValues = [];
-                if (node instanceof GTInfixNode) {
-                    filledNode = new GTFilledInfixNode(node);
+                if (node instanceof GTAffixNode) {
+                    filledNode = new GTFilledAffixNode(node);
                     filledNode.filledValues = configuration;
                 } else {
                     filledNode = node;
@@ -157,7 +157,7 @@ export default class ConstructGrammarTreeActions {
         };
     }
 
-    private _expandInfixNodes(self: ConstructGrammarTreeActions, nodeList: GTNodeChildren): {
+    private _expandAffixNodes(self: ConstructGrammarTreeActions, nodeList: GTNodeChildren): {
         configuration: {[param: string]: string},
         nodes: GTNodeChildren
     }[] {
@@ -178,13 +178,13 @@ export default class ConstructGrammarTreeActions {
     }
 
     private _declareNormalNode(self: ConstructGrammarTreeActions, left: GTNode, right: GTNodeChildren): GTNodeChildren {
-        const expandedInfixNodes = self._expandInfixNodes(self, right);
-        if (expandedInfixNodes.length === 0) {
+        const expandedAffixNodes = self._expandAffixNodes(self, right);
+        if (expandedAffixNodes.length === 0) {
             left.children?.push(...right);
             self._setParentOnChildren(right, left);
             return self._newOrSeq(left);
         } else {
-            left.children = expandedInfixNodes
+            left.children = expandedAffixNodes
                 .map((node) => node.nodes)
                 .reduce((acc, val) => acc.concat(val), []);
             self._setParentOnChildren(left.children, left);
@@ -192,9 +192,9 @@ export default class ConstructGrammarTreeActions {
         }
     }
 
-    private _declareContainingNoInfixNodes(self: ConstructGrammarTreeActions, left: GTInfixNode|GTFilledInfixNode, right: GTNodeChildren): GTNodeChildren {
-        const filledInfix = left instanceof GTInfixNode ? new GTFilledInfixNode(left) : left;
-        const possibleNames = filledInfix.generatePossibleNodeNames();
+    private _declareContainingNoAffixNodes(self: ConstructGrammarTreeActions, left: GTAffixNode|GTFilledAffixNode, right: GTNodeChildren): GTNodeChildren {
+        const filledAffix = left instanceof GTAffixNode ? new GTFilledAffixNode(left) : left;
+        const possibleNames = filledAffix.generatePossibleNodeNames();
         return possibleNames.map((name): SEQ<GTNode> => {
             const node = self.nodeIndex[name];
             node.children?.push(...right);
@@ -203,19 +203,19 @@ export default class ConstructGrammarTreeActions {
         });
     }
 
-    private _declareContainingInfixNodes(self: ConstructGrammarTreeActions, left: GTInfixNode|GTFilledInfixNode, configurations: {
+    private _declareContainingAffixNodes(self: ConstructGrammarTreeActions, left: GTAffixNode|GTFilledAffixNode, configurations: {
         configuration: {[param: string]: string},
         nodes: GTNodeChildren
     }[]): GTNodeChildren {
         const allNodes = new Set<GTNode>();
         configurations.forEach((config) => {
-            const filledInfixNode = left instanceof GTInfixNode ? new GTFilledInfixNode(left as GTInfixNode, config.configuration) : left as GTFilledInfixNode;
+            const filledAffixNode = left instanceof GTAffixNode ? new GTFilledAffixNode(left as GTAffixNode, config.configuration) : left as GTFilledAffixNode;
             for (const [key, value] of Object.entries(config.configuration)) {
-                if (!filledInfixNode.filledValues[key]) {
-                    filledInfixNode.filledValues[key] = value;
+                if (!filledAffixNode.filledValues[key]) {
+                    filledAffixNode.filledValues[key] = value;
                 }
             }
-            const normalNode = self.nodeIndex[filledInfixNode.generateName()];
+            const normalNode = self.nodeIndex[filledAffixNode.generateName()];
             normalNode.children?.push(...config.nodes);
             self._setParentOnChildren(config.nodes, normalNode);
             allNodes.add(normalNode);
@@ -233,12 +233,12 @@ export default class ConstructGrammarTreeActions {
         const leftSide = (anyNonTerminal.constructGrammarTree() as GTNodeChildren)[0][0];
         const rightSide: GTNodeChildren = conjunction.constructGrammarTree();
 
-        if (leftSide instanceof GTInfixNode || leftSide instanceof GTFilledInfixNode) {
-            const expandedInfixNodes = self._expandInfixNodes(self, rightSide);
-            if (expandedInfixNodes.length === 0) {
-                return self._declareContainingNoInfixNodes(self, leftSide, rightSide);
+        if (leftSide instanceof GTAffixNode || leftSide instanceof GTFilledAffixNode) {
+            const expandedAffixNodes = self._expandAffixNodes(self, rightSide);
+            if (expandedAffixNodes.length === 0) {
+                return self._declareContainingNoAffixNodes(self, leftSide, rightSide);
             } else {
-                return self._declareContainingInfixNodes(self, leftSide, expandedInfixNodes);
+                return self._declareContainingAffixNodes(self, leftSide, expandedAffixNodes);
             }
         } else {
             // We are dealing with a regular non-terminal
@@ -314,7 +314,7 @@ export default class ConstructGrammarTreeActions {
 
     /**
      * This function creates all possible permutations as normal nodes
-     * from an infix node.
+     * from an affix node.
      * For example, the following language:
      * ```
      * <Number> ::= "singular" | "plural";
@@ -327,66 +327,66 @@ export default class ConstructGrammarTreeActions {
      * Nounpluralfirst, Nounpluralsecond, Nounpluralthird
      * ```
      * @param self {ConstructGrammarTreeActions} - The instance of the ConstructGrammarTreeActions
-     * @param infix {GTInfixNode} - The node to create permutations from
-     * @param params {GTNode[]} - The parameters of the infix node
-     * @returns {GTInfixNode} - The infix node
+     * @param affix {GTAffixNode} - The node to create permutations from
+     * @param params {GTNode[]} - The parameters of the affix node
+     * @returns {GTAffixNode} - The affix node
      */
-    private _createAndRegisterInfixNodes(self: ConstructGrammarTreeActions, infix: GTInfixNode, params: GTNode[]): void {
+    private _createAndRegisterAffixNodes(self: ConstructGrammarTreeActions, affix: GTAffixNode, params: GTNode[]): void {
         // Infer all possible combinations of parameter values
         const indexArrays = allPossibleCombinations(...params.map((param: GTNode) => {
-            return param.childrenInfixStrings.length
+            return param.childrenAffixStrings.length
         }));
         // Create the new nodes
         for(const paramValueIndeces of indexArrays) {
-            let subName = infix.name;
+            let subName = affix.name;
             for (let i = 0; i < paramValueIndeces.length; i++) {
-                subName += params[i].childrenInfixStrings[paramValueIndeces[i]];
+                subName += params[i].childrenAffixStrings[paramValueIndeces[i]];
             }
             self.nodeIndex[subName] = new GTNode(subName);
         }
     }
 
     /**
-     * This function creates a filled infix node from an infix node and a list of parameters.
-     * @param infix {GTInfixNode} - The infix node to fill
-     * @param params {GTNode[]} - The parameters to fill the infix node with.
+     * This function creates a filled affix node from an affix node and a list of parameters.
+     * @param affix {GTAffixNode} - The affix node to fill
+     * @param params {GTNode[]} - The parameters to fill the affix node with.
      *  This can be a regular node or a GTTextLeaf. In case of a GTTextLeaf, the value of the GTTextLeaf
      *  must be a possible value for the parameter.
      * @private
      */
-    private _createFilledInfixFromInfix(infix: GTInfixNode, params: GTNode[]): GTFilledInfixNode {
+    private _createFilledAffixFromAffix(affix: GTAffixNode, params: GTNode[]): GTFilledAffixNode {
         const filledValues: { [valueName: string]: string } = {};
         for (let i = 0; i < params.length; i++) {
             if (params[i] instanceof GTTextLeaf) {
-                if (!infix.paramMayBe(infix.params[i].name, params[i].toString())) {
-                    throw new Error(`Parameter ${infix.params[i].name} cannot be ${params[i].name}`);
+                if (!affix.paramMayBe(affix.params[i].name, params[i].toString())) {
+                    throw new Error(`Parameter ${affix.params[i].name} cannot be ${params[i].name}`);
                 }
-                filledValues[infix.params[i].name] = params[i].toString();
+                filledValues[affix.params[i].name] = params[i].toString();
             }
         }
-        return new GTFilledInfixNode(infix, filledValues);
+        return new GTFilledAffixNode(affix, filledValues);
     }
 
-    InfixNonTerminal(
+    AffixNonTerminal(
         self: ConstructGrammarTreeActions,
         _: TerminalNode,
         name: NonterminalNode,
         _1: TerminalNode,
-        infixParam: NonterminalNode,
+        affixParam: NonterminalNode,
         _2: TerminalNode,
-        restInfixParams: NonterminalNode,
+        restAffixParams: NonterminalNode,
         _3: TerminalNode
     ) {
         const nameStr = name.sourceString;
-        const unparsedParams = [infixParam, ...restInfixParams.children];
+        const unparsedParams = [affixParam, ...restAffixParams.children];
         const parsedParams = unparsedParams.map((param) => (param.constructGrammarTree() as GTNodeChildren)[0][0]);
-        if (!self._infixes[nameStr]) {
-            const infix = self._infixes[nameStr] = new GTInfixNode(nameStr, parsedParams);
-            self._createAndRegisterInfixNodes(self, infix, parsedParams);
-            return self._newOrSeq(self._infixes[nameStr]);
+        if (!self._affixes[nameStr]) {
+            const affix = self._affixes[nameStr] = new GTAffixNode(nameStr, parsedParams);
+            self._createAndRegisterAffixNodes(self, affix, parsedParams);
+            return self._newOrSeq(self._affixes[nameStr]);
         } else {
-            const originalInfix = self._infixes[nameStr];
-            return self._newOrSeq(self._createFilledInfixFromInfix(originalInfix, parsedParams));
+            const originalAffix = self._affixes[nameStr];
+            return self._newOrSeq(self._createFilledAffixFromAffix(originalAffix, parsedParams));
         }
     }
 

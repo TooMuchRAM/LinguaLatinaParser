@@ -13,12 +13,12 @@ EIFWOBNF {
     ConstructRepeat = "{" Conjunction "}"
     ConstructOptional = "[" Conjunction "]"
     ConstructAnywhere = ".." Conjunction ".."
-    Unit = NonTerminal | InfixNonTerminal | Terminal | anythingSelector
+    Unit = NonTerminal | AffixNonTerminal | Terminal | anythingSelector
     anythingSelector = "..."
-    AnyNonTerminal = NonTerminal | InfixNonTerminal
+    AnyNonTerminal = NonTerminal | AffixNonTerminal
     NonTerminal = #("<" name ">")
-    InfixNonTerminal = #("<" name "(") InfixParam ("," InfixParam)* ")>"
-    InfixParam = Terminal | NonTerminal
+    AffixNonTerminal = #("<" name "(") AffixParam ("," AffixParam)* ")>"
+    AffixParam = Terminal | NonTerminal
     Terminal = quote name quote
     name = word
     word = letter*

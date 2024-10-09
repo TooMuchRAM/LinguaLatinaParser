@@ -14,7 +14,7 @@ export default class GTNode {
     /**
      * Get the string values for all children
      */
-    public get childrenInfixStrings(): string[] {
+    public get childrenAffixStrings(): string[] {
         return this.children?.map((childSeq) => (childSeq.toString())) || [];
     }
 

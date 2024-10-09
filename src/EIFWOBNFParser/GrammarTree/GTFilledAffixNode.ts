@@ -1,15 +1,15 @@
 import GTNode from "./GTNode";
-import GTInfixNode from "./GTInfixNode";
+import GTAffixNode from "./GTAffixNode";
 import {allPossibleCombinations} from "../utils";
 
-export default class GTFilledInfixNode extends GTNode {
+export default class GTFilledAffixNode extends GTNode {
     filledValues: { [key: string]: string };
-    infixNode: GTInfixNode;
+    affixNode: GTAffixNode;
 
-    constructor(infixNode: GTInfixNode, filledValues: { [key: string]: string } = {}) {
+    constructor(affixNode: GTAffixNode, filledValues: { [key: string]: string } = {}) {
         super("temporary");
         this.filledValues = filledValues;
-        this.infixNode = infixNode;
+        this.affixNode = affixNode;
     }
 
     /**
@@ -19,24 +19,24 @@ export default class GTFilledInfixNode extends GTNode {
      * @returns A list of possible node names.
      */
     public generatePossibleNodeNames(): string[] {
-        const unfilledParamIndeces: number[] = Array.from(this.infixNode.params.entries()).map(([index, param]) => {
+        const unfilledParamIndeces: number[] = Array.from(this.affixNode.params.entries()).map(([index, param]) => {
             if (this.filledValues[param.name] === undefined) {
                 return index;
             }
         }).filter((index) => index !== undefined);
         const indexArrays = allPossibleCombinations(...unfilledParamIndeces.map((index) => {
-            return this.infixNode.params[index].childrenInfixStrings.length;
+            return this.affixNode.params[index].childrenAffixStrings.length;
         }));
         const names = [];
         for(const indexArray of indexArrays) {
-            let subName = this.infixNode.name;
+            let subName = this.affixNode.name;
             let offset = 0;
             for (let i = 0; i < indexArray.length; i++) {
                 while (i + offset !== indexArray[i]) {
-                    subName += this.infixNode.params[i + offset].name
+                    subName += this.affixNode.params[i + offset].name
                     offset++;
                 }
-                subName += this.infixNode.params[i + offset].childrenInfixStrings[indexArray[i + offset]];
+                subName += this.affixNode.params[i + offset].childrenAffixStrings[indexArray[i + offset]];
             }
             names.push(subName);
         }
@@ -44,12 +44,12 @@ export default class GTFilledInfixNode extends GTNode {
     }
 
     public generateName(): string {
-        this.infixNode.params.forEach((param) => {
+        this.affixNode.params.forEach((param) => {
             if (this.filledValues[param.name] === undefined) {
                 throw new Error("Not all parameters are filled in");
             }
         });
-        return this.infixNode.name + this.infixNode.params.map((param) => {
+        return this.affixNode.name + this.affixNode.params.map((param) => {
             return this.filledValues[param.name];
         }).join("");
     }
