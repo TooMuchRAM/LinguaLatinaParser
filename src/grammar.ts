@@ -12,9 +12,67 @@ const latinGrammar = String.raw`
 <noun(<gender>, <number>, <case>)>;
 <adjective(<gender>, <number>, <case>)>;
 <verb(<person>, <number>, <tense>, <mood>, <voice>)>;
+
+<participium(<gender>, <number>, <case>)>;
+<gerund(<gender>, <number>, <case>)>;
+<gerundive(<gender>, <number>, <case>)>;
+
 <subject> ::= <noun(<gender>, <number>, "${CASES.NOMINATIVE}")>;
-<adclause> ::= "ad", {..<adjective(<gender>, <number>, "${CASES.ACCUSATIVE}")>..}, <noun(<gender>, <number>, "${CASES.ACCUSATIVE}")>;
-<sentence> ::= [..<subject>..], [..<adclause>..], ..<verb(<person>, <number>, <tense>, <mood>, <voice>)>.., ...;
+
+<persnpron(<gender>, <number>, <case>)>;
+<reflxpron(<gender>, <number>, <case>)>;
+<demstpron(<gender>, <number>, <case>)>;
+<relatpron(<gender>, <number>, <case>)>;
+<indefpron(<gender>, <number>, <case>)>;
+
+<nounlike(<gender>, <number>, <case>)> ::=
+<noun(<gender>, <number>, <case>)>
+| <persnpron(<gender>, <number>, <case>)>
+| <reflxpron(<gender>, <number>, <case>)>
+| <demstpron(<gender>, <number>, <case>)>
+| <relatpron(<gender>, <number>, <case>)>
+| <indefpron(<gender>, <number>, <case>)>
+| <gerund("${GENDERS.NEUTER}", "${NUMBERS.SINGULAR}", <case>)>;
+
+<adjectivelike(<gender>, <number>, <case>)> ::= 
+<adjective(<gender>, <number>, <case>)> 
+| <demstpron(<gender>, <number>, <case>)>
+| <indefpron(<gender>, <number>, <case>)>
+| <gerundive(<gender>, <number>, <case>)>
+| <participium(<gender>, <number>, <case>)>;
+
+<nounphrase(<gender>, <number>, <case>)> ::= {..<adjectivelike(<gender>, <number>, <case>)>..}, <nounlike(<gender>, <number>, <case>)>;
+
+<ad>;
+<ante>;
+<apud>;
+<inter>;
+<iuxta>;
+<per>;
+<post>;
+<ab>;
+<a>;
+<coram>;
+<cum>;
+<de>;
+<e>;
+<ex>;
+<pre>;
+<pro>;
+<sine>;
+<in>;
+<super>;
+<prepositionsacc> ::= (<ad> | <ante> | <apud>  | <inter>
+    | <iuxta> | <per> | <post> | <in> | <super>), 
+    <nounphrase(<gender>, <number>, "accusative")>;
+<prepositionsabl> ::= (<a> | <ab> | <coram> | <cum> 
+    | <de> | <e> | <ex> | <pre> | <pro> 
+    | <sine> | <in> | <super>), 
+    <nounphrase(<gender>, <number>, "ablative")>;
+
+<preposition> ::= <prepositionsacc> | <prepositionsabl>;
+
+<sentence> ::= [..<subject>..], [..<preposition>..], ..<verb(<person>, <number>, <tense>, <mood>, <voice>)>.., ...;
 `;
 
 export default latinGrammar;

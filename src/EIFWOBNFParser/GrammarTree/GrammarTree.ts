@@ -1,6 +1,7 @@
 import GTNode from "./GTNode";
 import GTAnywhereNode from "./GTAnywhereNode";
 import GTTextLeaf from "./GTTextLeaf";
+import SEQ from "./SEQ";
 
 export default class GrammarTree {
     public root: GTNode;
@@ -14,6 +15,14 @@ export default class GrammarTree {
 
     public toString(): string {
         return this.root.toString();
+    }
+
+    public parse(input: SEQ<GTNode>) {
+        const nodes = input.map(node => this.nodeIndex[node.name]);
+        const root = this.root;
+        for (let i = 0; i<nodes.length; i++) {
+
+        }
     }
 }
 

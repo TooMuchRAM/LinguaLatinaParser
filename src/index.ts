@@ -1,6 +1,6 @@
 import LinguaLatinaParser from "./LinguaLatinaParser";
 
 const llParser = new LinguaLatinaParser();
-llParser.parse("deus sum").then(() => {
+llParser.parse("ad litus ambulo").then(() => {
     console.log("Parsed!");
 });

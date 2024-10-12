@@ -9,7 +9,6 @@
     "generate": "ohm generateBundles --withTypes 'src/*/eifwobnf/*.ohm'"
   },
   "dependencies": {
-    "fast-xml-parser": "^4.5.0",
     "isomorphic-unfetch": "^4.0.2",
     "ohm-js": "^17.1.0",
     "sentence-splitter": "^5.0.0"

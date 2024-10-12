@@ -1,5 +1,4 @@
 import {perseusEndpoint} from "./constants";
-import {XMLParser} from "fast-xml-parser";
 import GTNodeChildren from "./EIFWOBNFParser/GrammarTree/GTNodeChildren";
 import GTNode from "./EIFWOBNFParser/GrammarTree/GTNode";
 import OR from "./EIFWOBNFParser/GrammarTree/OR";
@@ -13,9 +12,6 @@ export interface PerseusLemmatiserOutput {
 
 export default class PerseusLemmatiser {
     private perseusEndpoint = perseusEndpoint;
-    private xmlParser = new XMLParser({
-        preserveOrder: false
-    });
 
     public settings: (output: PerseusLemmatiserOutput) => GTNode;
 
@@ -27,23 +23,66 @@ export default class PerseusLemmatiser {
         word: string,
     ): Promise<GTNodeChildren> {
         const response = await fetch(this.perseusEndpoint(word));
-        const text = await response.text();
+        const json = await response.json();
         const returnValue = new OR(new SEQ<GTNode>());
-        const json = this.xmlParser.parse(text);
 
-        if (!json["RDF"] || !json["RDF"]["Annotation"] || !json["RDF"]["Annotation"]["Body"]) return [];
-        json["RDF"]["Annotation"]["Body"].forEach((body: any) => {
-            if (!body["rest"]["entry"]["infl"]) return;
-            body["rest"]["entry"]["infl"].forEach((infl: any) => {
-                if (!infl["term"]) return;
-                const output: PerseusLemmatiserOutput = {
-                    pos: infl["pos"],
-                    lemma: word,
-                    inflection: infl
-                };
-                returnValue.push(new SEQ(this.settings(output)));
+        if (!json["RDF"] || !json["RDF"]["Annotation"] || !json["RDF"]["Annotation"]["Body"]) return new OR(new SEQ<GTNode>());
+        if (!Array.isArray(json["RDF"]["Annotation"]["Body"])) {
+            const output = this.getOutputFromBody(json["RDF"]["Annotation"]["Body"], word);
+            if (output) returnValue.push(...output);
+        } else {
+            json["RDF"]["Annotation"]["Body"].forEach((body: any) => {
+                returnValue.push(...this.getOutputFromBody(body, word));
             });
-        });
-        return json;
+        }
+
+        return returnValue.filter((x: SEQ<GTNode>) => x.length !== 0);
+    }
+
+    private getOutputFromBody(body: any, word: string): GTNodeChildren {
+        if (!body["rest"]["entry"]["infl"]) return new OR(new SEQ<GTNode>());
+        if (!Array.isArray(body["rest"]["entry"]["infl"])) {
+            return new OR(new SEQ(
+                this.settings(this.getOutputFromInflections(
+                    body["rest"]["entry"]["infl"],
+                    word
+                ))
+            ));
+        } else {
+            return body["rest"]["entry"]["infl"].map((infl: any) => {
+                if (!infl["term"]) return new SEQ<GTNode>();
+                const output: PerseusLemmatiserOutput = this.getOutputFromInflections(infl, word);
+                return (new SEQ(this.settings(output)));
+            }).filter((x: SEQ<GTNode>) => x.length !== 0);
+        }
+    }
+
+    private getOutputFromInflections(infl: any, word: string): PerseusLemmatiserOutput {
+        infl = this.flattenDollarKey(infl);
+        return {
+            pos: infl["pofs"],
+            lemma: word,
+            inflection: infl
+        };
+    }
+
+    private flattenDollarKey(json: any): any {
+        if (Array.isArray(json)) {
+            return json.map(this.flattenDollarKey); // Recursively transform each item in the array
+        } else if (typeof json === 'object' && json !== null) {
+            // Check if the object contains only the "$" key (and optionally other keys like "order")
+            if ('$' in json && Object.keys(json).length <= 2) {
+                return json['$']; // Replace the object with the value of "$"
+            } else {
+                // Recursively apply the transformation to all key-value pairs
+                const transformedObject: any = {};
+                for (const key in json) {
+                    transformedObject[key] = this.flattenDollarKey(json[key]);
+                }
+                return transformedObject;
+            }
+        } else {
+            return json; // Return non-object values (e.g., strings, numbers) as they are
+        }
     }
 }

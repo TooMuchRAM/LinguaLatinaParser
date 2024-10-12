@@ -5,8 +5,8 @@ EIFWOBNF {
     Declaration = AnyNonTerminal ";"
    	Initialisation = AnyNonTerminal "::=" Conjunction ";"
     Grouping = "(" Conjunction ")"
-    Conjunction = (Grouping | Composition) "|" Conjunction --head
-    	| (Grouping | Composition) --tail
+    Conjunction = Composition "|" Conjunction --head
+    	| Composition --tail
     Composition = (Construct|Grouping) "," Composition -- head
     	| (Construct|Grouping) -- tail
     Construct = ConstructRepeat | ConstructOptional | ConstructAnywhere | Term
@@ -21,6 +21,6 @@ EIFWOBNF {
     AffixParam = Terminal | NonTerminal
     Terminal = quote name quote
     name = word
-    word = letter*
+    word = (letter | digit)*
 	quote = "'" | "\""
 }

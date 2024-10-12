@@ -1,6 +1,7 @@
 import GTNode from "./GTNode";
 import GTAffixNode from "./GTAffixNode";
 import {allPossibleCombinations} from "../utils";
+import GTTextLeaf from "./GTTextLeaf";
 
 export default class GTFilledAffixNode extends GTNode {
     filledValues: { [key: string]: string };
@@ -32,8 +33,8 @@ export default class GTFilledAffixNode extends GTNode {
             let subName = this.affixNode.name;
             let offset = 0;
             for (let i = 0; i < indexArray.length; i++) {
-                while (i + offset !== indexArray[i]) {
-                    subName += this.affixNode.params[i + offset].name
+                while (i + offset !== unfilledParamIndeces[i]) {
+                    subName += this.filledValues[this.affixNode.params[i + offset].name];
                     offset++;
                 }
                 subName += this.affixNode.params[i + offset].childrenAffixStrings[indexArray[i + offset]];
@@ -44,13 +45,17 @@ export default class GTFilledAffixNode extends GTNode {
     }
 
     public generateName(): string {
-        this.affixNode.params.forEach((param) => {
+        this.affixNode.params.filter(param => !(param instanceof GTTextLeaf)).forEach((param) => {
             if (this.filledValues[param.name] === undefined) {
                 throw new Error("Not all parameters are filled in");
             }
         });
         return this.affixNode.name + this.affixNode.params.map((param) => {
-            return this.filledValues[param.name];
+            if (param instanceof GTTextLeaf) {
+                return `"${param.name}"`;
+            } else {
+                return this.filledValues[param.name];
+            }
         }).join("");
     }
 }

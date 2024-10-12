@@ -20,9 +20,13 @@ export default class LinguaLatinaParser {
 
     public async parse(input: string): Promise<void> {
         const sentences = this.splitSentences(input);
-        const parsed = await sentences.map(async sentence => {
-            const lemmatised = await this.lemmatise(sentence);
-        });
+        const lemmatised: GTNodeChildren = new OR();
+        for (const sentence of sentences) {
+            lemmatised.push(...await this.lemmatise(sentence));
+        }
+        for (const lemmatisedSentence of lemmatised) {
+            this.grammarTree.parse(lemmatisedSentence);
+        }
     }
 
     private splitSentences(input: string): string[] {
@@ -36,21 +40,35 @@ export default class LinguaLatinaParser {
 
     private async lemmatise(sentence: string): Promise<GTNodeChildren> {
         const tokens = this.tokenise(sentence);
-        let children = new OR(new SEQ<GTNode>());
+        let children = new OR<SEQ<GTNode>>();
         for (const token of tokens) {
             const lemmatised = await this.lemmatiser.lemmatise(token);
             if (children.length == 0) {
                 children = lemmatised;
             } else {
                 const childrenLength = children.length;
-                for(let i = 0; i<lemmatised.length; i++) {
-                    if (i > 0) {
-                        children.push(...children.slice(0));
-                    }
-                    for (let j = 0; j<childrenLength; j++) {
-                        children[i*childrenLength + j].push(...lemmatised[i]);
+                if (lemmatised.length > 1) {
+                    const slice = children.slice(0);
+                    for (let i = 1; i<lemmatised.length; i++) {
+                        children.push(...structuredClone(slice));
                     }
                 }
+                if (lemmatised.length > childrenLength) {
+                    for(let i = 0; i<lemmatised.length; i++) {
+                        for (let j = 0; j<childrenLength; j++) {
+                            const pushAt = j*(childrenLength-1) + i;
+                            children[pushAt].push(...lemmatised[j]);
+                        }
+                    }
+                } else {
+                    for (let i = 0; i < childrenLength; i++) {
+                        for (let j = 0; j < lemmatised.length; j++) {
+                            const pushAt = j*(childrenLength-1) + i;
+                            children[pushAt].push(...lemmatised[j]);
+                        }
+                    }
+                }
+
             }
         }
         return children;
@@ -95,7 +113,6 @@ export default class LinguaLatinaParser {
                     return new GTNode("adverb");
             }
         })();
-        console.log(output);
 
         node.children = new OR(new SEQ<GTNode>(
             new GTTextLeaf(output.lemma)

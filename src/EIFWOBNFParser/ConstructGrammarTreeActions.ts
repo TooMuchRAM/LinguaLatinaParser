@@ -92,7 +92,7 @@ export default class ConstructGrammarTreeActions {
      * @returns {Set<GTNode>} - The set of parameters
      * @private
      */
-    private _getAllParameters(self: ConstructGrammarTreeActions, nodeList: GTNodeChildren): Set<GTNode> {
+    private _getAllParameters(self: ConstructGrammarTreeActions, nodeList: GTNodeChildren): GTNode[] {
         const params: Set<GTNode> = new Set();
         self._mapAffixNodes(self, nodeList, (node) => {
             if (node instanceof GTAffixNode) {
@@ -108,19 +108,18 @@ export default class ConstructGrammarTreeActions {
             }
             return node;
         });
-        return params;
+        return Array.from(params).filter((param) => !(param instanceof GTTextLeaf));
     }
 
-    private _generateAllParameterCombinations(parameters: Set<GTNode>): { [param: string]: string }[] {
-        const paramsToExpandArray = Array.from(parameters);
+    private _generateAllParameterCombinations(parameters: GTNode[]): { [param: string]: string }[] {
         const configurations: { [param: string]: string }[] = [];
-        const possibleIndexCombinations = allPossibleCombinations(...paramsToExpandArray.map((param) => {
+        const possibleIndexCombinations = allPossibleCombinations(...parameters.map((param) => {
             return param.childrenAffixStrings.length;
         }));
         for (const indexCombination of possibleIndexCombinations) {
             const configuration: { [param: string]: string } = {};
             for (let i = 0; i < indexCombination.length; i++) {
-                configuration[paramsToExpandArray[i].name] = paramsToExpandArray[i].childrenAffixStrings[indexCombination[i]];
+                configuration[parameters[i].name] = parameters[i].childrenAffixStrings[indexCombination[i]];
             }
             configurations.push(configuration);
         }
@@ -164,7 +163,7 @@ export default class ConstructGrammarTreeActions {
         // Get all parameters to expand
         const paramsToExpand = self._getAllParameters(self, nodeList);
 
-        if (paramsToExpand.size === 0) {
+        if (paramsToExpand.length === 0) {
             return [];
         }
 

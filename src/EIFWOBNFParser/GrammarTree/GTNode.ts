@@ -1,4 +1,5 @@
 import GTNodeChildren from "./GTNodeChildren";
+import OR from "./OR";
 
 export default class GTNode {
     public constructor(public readonly name: string) {
@@ -9,7 +10,7 @@ export default class GTNode {
      * List of all possible parents
      */
     public parents: Set<GTNode> = new Set();
-    public children?: GTNodeChildren = [];
+    public children?: GTNodeChildren = new OR();
 
     /**
      * Get the string values for all children

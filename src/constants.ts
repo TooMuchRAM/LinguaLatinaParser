@@ -36,9 +36,9 @@ export enum NUMBERS {
 }
 
 export enum PERSONS {
-    FIRST = "first",
-    SECOND = "second",
-    THIRD = "third",
+    FIRST = "1st",
+    SECOND = "2nd",
+    THIRD = "3rd",
 }
 
 export enum GENDERS {
