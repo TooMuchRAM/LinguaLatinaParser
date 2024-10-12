@@ -20,9 +20,8 @@ export default class GrammarTree {
     public parse(input: SEQ<GTNode>) {
         const nodes = input.map(node => this.nodeIndex[node.name]);
         const root = this.root;
-        for (let i = 0; i<nodes.length; i++) {
-
-        }
+        const matches = root.matchChildren(nodes);
+        console.log(matches);
     }
 }
 

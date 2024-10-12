@@ -17,8 +17,6 @@ const latinGrammar = String.raw`
 <gerund(<gender>, <number>, <case>)>;
 <gerundive(<gender>, <number>, <case>)>;
 
-<subject> ::= <noun(<gender>, <number>, "${CASES.NOMINATIVE}")>;
-
 <persnpron(<gender>, <number>, <case>)>;
 <reflxpron(<gender>, <number>, <case>)>;
 <demstpron(<gender>, <number>, <case>)>;
@@ -73,6 +71,9 @@ const latinGrammar = String.raw`
 <preposition> ::= <prepositionsacc> | <prepositionsabl>;
 
 <sentence> ::= [..<subject>..], [..<preposition>..], ..<verb(<person>, <number>, <tense>, <mood>, <voice>)>.., ...;
+
+<subject> ::= <adjective(<gender>, <number>, "${CASES.NOMINATIVE}")>, <noun(<gender>, <number>, "${CASES.NOMINATIVE}")>;
+
 `;
 
 export default latinGrammar;

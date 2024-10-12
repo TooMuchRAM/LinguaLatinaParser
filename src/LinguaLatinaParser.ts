@@ -57,7 +57,7 @@ export default class LinguaLatinaParser {
                     for(let i = 0; i<lemmatised.length; i++) {
                         for (let j = 0; j<childrenLength; j++) {
                             const pushAt = j*(childrenLength-1) + i;
-                            children[pushAt].push(...lemmatised[j]);
+                            children[pushAt].push(...lemmatised[i]);
                         }
                     }
                 } else {
