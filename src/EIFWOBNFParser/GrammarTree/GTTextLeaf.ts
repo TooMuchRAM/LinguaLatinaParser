@@ -1,7 +1,6 @@
 import GTNode from "./GTNode";
 import SEQ from "./SEQ";
-import GTNodeChildren from "./GTNodeChildren";
-import OR from "./OR";
+import GTMatchResult from "./GTMatchResult";
 
 export default class GTTextLeaf extends GTNode {
 
@@ -10,7 +9,15 @@ export default class GTTextLeaf extends GTNode {
         return `"${this.name}"`;
     }
 
-    override matchChildren(_: SEQ<GTNode>): GTNodeChildren {
-        return new OR();
+    override matchChildren(input: SEQ<GTNode>): GTMatchResult[] {
+        if (input[0].name === this.name) {
+            return [
+              new GTMatchResult({
+                    remaining: input.slice(1)
+              })
+            ];
+        } else {
+            return [];
+        }
     }
 }

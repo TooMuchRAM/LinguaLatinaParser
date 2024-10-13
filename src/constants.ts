@@ -8,6 +8,7 @@ export enum CASES {
     DATIVE = "dative",
     ACCUSATIVE = "accusative",
     ABLATIVE = "ablative",
+    VOCATIVE = "vocative",
 }
 
 export enum TENSES {

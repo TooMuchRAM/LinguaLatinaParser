@@ -24,7 +24,9 @@ export default class LinguaLatinaParser {
         for (const sentence of sentences) {
             lemmatised.push(...await this.lemmatise(sentence));
         }
-        for (const lemmatisedSentence of lemmatised) {
+        for (let i = 0; i <lemmatised.length; i++) {
+            console.log(i);
+            const lemmatisedSentence = lemmatised[i];
             this.grammarTree.parse(lemmatisedSentence);
         }
     }

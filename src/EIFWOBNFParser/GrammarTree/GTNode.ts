@@ -1,6 +1,7 @@
 import GTNodeChildren from "./GTNodeChildren";
 import OR from "./OR";
 import SEQ from "./SEQ";
+import GTMatchResult from "./GTMatchResult";
 
 export default class GTNode {
     public constructor(public readonly name: string) {
@@ -24,58 +25,71 @@ export default class GTNode {
         return `${this.name}${(this.children?.length || 0) > 0 ? `(${(this.children)?.join(" | ") || ""})` : ""}`;
     }
 
-    public matchChildren(input: SEQ<GTNode>): GTNodeChildren {
+    public matchChildren(input: SEQ<GTNode>): GTMatchResult[] {
         if (this.children === undefined || this.children.length === 0) {
-            return new OR(input);
+            return [];
         }
 
-        const matches = new OR<SEQ<GTNode>>(
-            input.slice(0)
-        );
-        let lastMatchIndex = 0;
+        const matches = new Array<GTMatchResult>();
+        const queue = new Array<{
+            seq: SEQ<GTNode>,
+            seqIndex: number,
+            match: GTMatchResult
+        }>();
+        for (const seq of this.children) {
+            queue.push(
+                {
+                    seq,
+                    seqIndex: 0,
+                    match: new GTMatchResult({
+                        remaining: input.slice(0)
+                    })
+                }
+            );
+        }
 
-        for (let i = 0; i <this.children.length; i++) {
-            const seq = this.children[i];
-            const queue: {
-                matchIndex: number,
-                seqIndex: number
-            }[] = [{
-                matchIndex: lastMatchIndex,
-                seqIndex: 0
-            }];
-            while (queue.length > 0) {
-                const {matchIndex, seqIndex} = queue.shift()!;
-                if (seqIndex >= seq.length) {
-                    continue;
-                }
-                if (matches[matchIndex].length === 0) {
-                    continue;
-                }
-                if (seq[seqIndex].name === matches[matchIndex][0].name) {
-                    matches[matchIndex].shift();
-                    queue.push({
-                        matchIndex: matchIndex,
-                        seqIndex: seqIndex + 1
-                    });
-                } else {
-                    const recursiveMatches = seq[seqIndex].matchChildren(matches[matchIndex]);
-                    if (recursiveMatches.length > 0) {
-                        const matchesLength = matches.length;
-                        matches.splice(matchIndex, 1);
-                        matches.push(...recursiveMatches);
-                        for (let j = 0; j < recursiveMatches.length; j++) {
-                            queue.push({
-                                matchIndex: matchesLength-1 + j,
-                                seqIndex: seqIndex + 1
-                            })
-                        }
-                    }
-                }
+        while (queue.length > 0) {
+            const {seq, seqIndex, match} = queue.shift()!;
+            const node = seq[seqIndex];
+
+            if (seqIndex >= seq.length) {
+                matches.push(match);
+                continue;
             }
 
-            if (i > 1) {
-                matches.push(input.slice(0))
-                lastMatchIndex = matches.length - 1;
+            if (match.remaining.length === 0) {
+                // ignore
+                continue;
+            }
+
+            if (node.name === match.remaining[0].name) {
+                match.remaining.shift();
+                queue.push({
+                    seq,
+                    seqIndex: seqIndex + 1,
+                    match: match
+                });
+            } else {
+                const recursiveMatches = node.matchChildren(match.remaining);
+                for (const recursiveMatch of recursiveMatches) {
+                    recursiveMatch.anywhere.requirements = [
+                        ...match.anywhere.requirements,
+                        ...recursiveMatch.anywhere.requirements
+                    ];
+                    recursiveMatch.anywhere.optionals = [
+                        ...match.anywhere.optionals,
+                        ...recursiveMatch.anywhere.optionals
+                    ];
+                    recursiveMatch.anywhere.repeatables = [
+                        ...match.anywhere.repeatables,
+                        ...recursiveMatch.anywhere.repeatables
+                    ];
+                    queue.push({
+                        seq,
+                        seqIndex: seqIndex + 1,
+                        match: recursiveMatch
+                    });
+                }
             }
 
         }

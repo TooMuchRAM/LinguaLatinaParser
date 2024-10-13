@@ -4,7 +4,7 @@ const latinGrammar = String.raw`
 <person> ::= "${PERSONS.FIRST}" | "${PERSONS.SECOND}" | "${PERSONS.THIRD}";
 <gender> ::= "${GENDERS.MASCULINE}" | "${GENDERS.FEMININE}" | "${GENDERS.NEUTER}";
 <number> ::= "${NUMBERS.SINGULAR}" | "${NUMBERS.PLURAL}";
-<case> ::= "${CASES.NOMINATIVE}" | "${CASES.GENITIVE}" | "${CASES.DATIVE}" | "${CASES.ACCUSATIVE}" | "${CASES.ABLATIVE}";
+<case> ::= "${CASES.NOMINATIVE}" | "${CASES.GENITIVE}" | "${CASES.DATIVE}" | "${CASES.ACCUSATIVE}" | "${CASES.ABLATIVE}" | "${CASES.VOCATIVE}";
 <tense> ::= "${TENSES.PRAESENS}" | "${TENSES.PERFECTUM}" | "${TENSES.IMPERFECTUM}" | "${TENSES.FUTURUM}" | "${TENSES.PLUSQUAMPERFECTUM}" | "${TENSES.FUTURUMEXACTUM}";
 <mood> ::= "${MOODS.INDICATIVE}" | "${MOODS.SUBJUNCTIVE}" | "${MOODS.IMPERATIVE}";
 <voice> ::= "${VOICES.ACTIVE}" | "${VOICES.PASSIVE}";
@@ -70,10 +70,10 @@ const latinGrammar = String.raw`
 
 <preposition> ::= <prepositionsacc> | <prepositionsabl>;
 
-<sentence> ::= [..<subject>..], [..<preposition>..], ..<verb(<person>, <number>, <tense>, <mood>, <voice>)>.., ...;
+<subject> ::= <nounphrase(<gender>, <number>, "nominative")>;
+<verbphrase> ::= <verb(<person>, <number>, <tense>, <mood>, <voice>)>;
 
-<subject> ::= <adjective(<gender>, <number>, "${CASES.NOMINATIVE}")>, <noun(<gender>, <number>, "${CASES.NOMINATIVE}")>;
-
+<sentence> ::= [..<subject>..], ..<preposition>.., ..<verbphrase>..;
 `;
 
 export default latinGrammar;

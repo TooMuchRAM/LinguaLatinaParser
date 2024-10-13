@@ -1,6 +1,6 @@
 import LinguaLatinaParser from "./LinguaLatinaParser";
 
 const llParser = new LinguaLatinaParser();
-llParser.parse("bonus canis").then(() => {
+llParser.parse("canis ad litus ambulat").then(() => {
     console.log("Parsed!");
 });

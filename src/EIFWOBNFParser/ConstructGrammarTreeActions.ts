@@ -258,11 +258,26 @@ export default class ConstructGrammarTreeActions {
     }
 
     Composition_head(self: ConstructGrammarTreeActions, ConstructOrGrouping: NonterminalNode, _: TerminalNode, composition: NonterminalNode): GTNodeChildren {
-        const node: GTNodeChildren = ConstructOrGrouping.constructGrammarTree();
-        const compositionNode: GTNodeChildren = composition.constructGrammarTree();
-        return compositionNode.map((seq) => {
-            return new SEQ(node[0][0], ...seq);
-        });
+        const nodes: GTNodeChildren = ConstructOrGrouping.constructGrammarTree();
+        const result = nodes.map(seq => seq.splice(0));
+        const compositionNodes: GTNodeChildren = composition.constructGrammarTree();
+        for (let i = 1; i < compositionNodes.length; i++) {
+            result.push(...nodes.map(seq => seq.splice(0)));
+        }
+        if (compositionNodes.length > nodes.length) {
+            for (let i = 0; i < compositionNodes.length; i++) {
+                for (let j = 0; j < nodes.length; j++) {
+                    result[j].push(...compositionNodes[i]);
+                }
+            }
+        } else {
+            for (let i = 0; i < nodes.length; i++) {
+                for (let j = 0; j < compositionNodes.length; j++) {
+                    result[i].push(...compositionNodes[j]);
+                }
+            }
+        }
+        return result;
     }
 
     Grouping(self: ConstructGrammarTreeActions, _1: TerminalNode, Construct: NonterminalNode, _2: TerminalNode): GTNodeChildren {
