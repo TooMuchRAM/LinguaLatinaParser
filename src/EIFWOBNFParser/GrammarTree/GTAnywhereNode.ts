@@ -27,4 +27,21 @@ export default class GTAnywhereNode extends GTConstructNode {
             matchResult
         ];
     }
+
+    public matchChildrenAnywhere(input: GTNode[]): GTMatchResult[] {
+        let matches = super.matchChildren(input);
+        const skipped = new Array<GTNode>();
+        const inputCopy = input.slice(0);
+        while (matches.length === 0 && inputCopy.length > 0) {
+            skipped.push(inputCopy.shift()!);
+            matches = super.matchChildren(inputCopy);
+        }
+        if (matches.length === 0) {
+            return [];
+        }
+        return matches.map(match => {
+           match.remaining = skipped.concat(match.remaining);
+           return match;
+        });
+    }
 }

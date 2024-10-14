@@ -77,7 +77,6 @@ export default class LinguaLatinaParser {
     }
 
     private perseusOutputToNode(output: PerseusLemmatiserOutput): GTNode {
-        // TODO: filter out vocatives
         const node: GTNode = (() => {
             switch (output.pos) {
                 case "conjunction":
