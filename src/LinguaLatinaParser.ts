@@ -8,6 +8,7 @@ import GTNode from "./EIFWOBNFParser/GrammarTree/GTNode";
 import OR from "./EIFWOBNFParser/GrammarTree/OR";
 import SEQ from "./EIFWOBNFParser/GrammarTree/SEQ";
 import GTTextLeaf from "./EIFWOBNFParser/GrammarTree/GTTextLeaf";
+import GTStackTrace from "./EIFWOBNFParser/GrammarTree/GTStackTrace";
 
 export default class LinguaLatinaParser {
     private eifwobnfParser: EIFWOBNFParser = new EIFWOBNFParser();
@@ -18,17 +19,18 @@ export default class LinguaLatinaParser {
         this.grammarTree = this.eifwobnfParser.parse(latinGrammar);
     }
 
-    public async parse(input: string): Promise<void> {
+    public async parse(input: string): Promise<GTStackTrace[][]> {
         const sentences = this.splitSentences(input);
-        const lemmatised: GTNodeChildren = new OR();
+        const output: GTStackTrace[][] = [];
         for (const sentence of sentences) {
-            lemmatised.push(...await this.lemmatise(sentence));
+            const parsed = new Array<GTStackTrace>();
+            const lemmatised = await this.lemmatise(sentence);
+            for (const lemmatisation of lemmatised) {
+                parsed.push(...this.grammarTree.parse(lemmatisation));
+            }
+            output.push(parsed);
         }
-        for (let i = 0; i <lemmatised.length; i++) {
-            console.log(i);
-            const lemmatisedSentence = lemmatised[i];
-            this.grammarTree.parse(lemmatisedSentence);
-        }
+        return output;
     }
 
     private splitSentences(input: string): string[] {

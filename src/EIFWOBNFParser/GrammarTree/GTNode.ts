@@ -14,6 +14,8 @@ export default class GTNode {
     public parents: Set<GTNode> = new Set();
     public children?: GTNodeChildren = new OR();
 
+    public identifier: string = crypto.randomUUID();
+
     /**
      * Get the string values for all children
      */
@@ -63,7 +65,7 @@ export default class GTNode {
             }
 
             if (node.name === match.remaining[0].name) {
-                match.remaining.shift();
+                match.stacktrace.push(match.remaining.shift()!, this);
                 queue.push({
                     seq,
                     seqIndex: seqIndex + 1,
@@ -72,18 +74,7 @@ export default class GTNode {
             } else {
                 const recursiveMatches = node.matchChildren(match.remaining);
                 for (const recursiveMatch of recursiveMatches) {
-                    recursiveMatch.anywhere.requirements = [
-                        ...match.anywhere.requirements,
-                        ...recursiveMatch.anywhere.requirements
-                    ];
-                    recursiveMatch.anywhere.optionals = [
-                        ...match.anywhere.optionals,
-                        ...recursiveMatch.anywhere.optionals
-                    ];
-                    recursiveMatch.anywhere.repeatables = [
-                        ...match.anywhere.repeatables,
-                        ...recursiveMatch.anywhere.repeatables
-                    ];
+                    recursiveMatch.transfer(match);
                     queue.push({
                         seq,
                         seqIndex: seqIndex + 1,
@@ -94,7 +85,10 @@ export default class GTNode {
 
         }
 
-        return matches;
+        return matches.map(match => {
+            match.stacktrace.addParent(this);
+            return match;
+        });
 
     }
 }

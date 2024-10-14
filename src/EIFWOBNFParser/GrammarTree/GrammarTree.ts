@@ -3,6 +3,7 @@ import GTAnywhereNode from "./GTAnywhereNode";
 import GTTextLeaf from "./GTTextLeaf";
 import SEQ from "./SEQ";
 import GTMatchResult from "./GTMatchResult";
+import GTStackTrace from "./GTStackTrace";
 
 export default class GrammarTree {
     public root: GTNode;
@@ -18,18 +19,33 @@ export default class GrammarTree {
         return this.root.toString();
     }
 
-    public parse(input: SEQ<GTNode>) {
-        const nodes = input.map(node => this.nodeIndex[node.name]);
+    public parse(input: SEQ<GTNode>): GTStackTrace[] {
         const root = this.root;
-        const matches = root.matchChildren(nodes);
-        for (const match of matches) {
-            if (match.remaining.length === 0) {
-                console.log(match);
-            }
-        }
+        const matches = root.matchChildren(input);
         // We now have to waddle through the remaining nodes and try to find a match
         // from the anywhere nodes
-        return this.parseAnywhereNodes(matches);
+        const allParsed = this.parseAnywhereNodes(matches);
+        return allParsed.map(match => this.putInOrder(input, match.stacktrace));
+    }
+
+    /**
+     * This function takes a stacktrace and tries to put the nodes in the stack trace
+     * in the same order as in the input.
+     * @param input
+     * @param stacktrace
+     * @private
+     */
+    private putInOrder(input: SEQ<GTNode>, stacktrace: GTStackTrace) {
+        const ordered = new GTStackTrace();
+        for (const node of input) {
+            for (const stacktraceNode of stacktrace.stack) {
+                if (stacktraceNode.node.identifier === node.identifier) {
+                    ordered.stack.push(stacktraceNode);
+                    break;
+                }
+            }
+        }
+        return ordered;
     }
 
     /**
@@ -59,9 +75,7 @@ export default class GrammarTree {
             const anywhereNode = match.anywhere.requirements.shift()!;
             const anywhereMatches = anywhereNode.matchChildrenAnywhere(remaining);
             requirementQueue.push(...anywhereMatches.map(anywhereMatch => {
-                    anywhereMatch.anywhere.requirements.push(...match.anywhere.requirements.splice(0));
-                    anywhereMatch.anywhere.optionals.push(...match.anywhere.optionals.splice(0));
-                    anywhereMatch.anywhere.repeatables.push(...match.anywhere.repeatables.splice(0));
+                    anywhereMatch.transfer(match);
                     return anywhereMatch
                 }
             ));
@@ -84,9 +98,9 @@ export default class GrammarTree {
                 optionalQueue.push(match);
             } else {
                 optionalQueue.push(...anywhereMatches.map(anywhereMatch => {
-                        anywhereMatch.anywhere.optionals.push(...match.anywhere.optionals.splice(0))
-                        anywhereMatch.anywhere.optionals.push(...anywhereMatch.anywhere.requirements.splice(0));
-                        anywhereMatch.anywhere.repeatables.push(...match.anywhere.repeatables.splice(0));
+                        anywhereMatch.anywhere.optionals.push(...match.anywhere.optionals)
+                        anywhereMatch.anywhere.optionals.push(...anywhereMatch.anywhere.requirements);
+                        anywhereMatch.anywhere.repeatables.push(...match.anywhere.repeatables);
                         return anywhereMatch
                     }
                 ));
@@ -110,9 +124,9 @@ export default class GrammarTree {
             } else {
                 repeatableQueue.push(...anywhereMatches.map(anywhereMatch => {
                         anywhereMatch.anywhere.repeatables.push(anywhereNode);
-                        anywhereMatch.anywhere.repeatables.push(...match.anywhere.repeatables.splice(0));
-                        anywhereMatch.anywhere.repeatables.push(...anywhereMatch.anywhere.requirements.splice(0));
-                        anywhereMatch.anywhere.repeatables.push(...anywhereMatch.anywhere.optionals.splice(0));
+                        anywhereMatch.anywhere.repeatables.push(...match.anywhere.repeatables);
+                        anywhereMatch.anywhere.repeatables.push(...anywhereMatch.anywhere.requirements);
+                        anywhereMatch.anywhere.repeatables.push(...anywhereMatch.anywhere.optionals);
                         return anywhereMatch
                     }
                 ));
