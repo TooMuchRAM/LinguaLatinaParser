@@ -71,9 +71,10 @@ const latinGrammar = String.raw`
 <preposition> ::= <prepositionsacc> | <prepositionsabl>;
 
 <subject> ::= <nounphrase(<gender>, <number>, "nominative")>;
+<object> ::= <nounphrase(<gender>, <number>, "accusative")>;
 <verbphrase> ::= <verb(<person>, <number>, <tense>, <mood>, <voice>)>;
 
-<sentence> ::= [..<subject>..], ..<preposition>.., ..<verbphrase>..;
+<sentence> ::= [..<subject>..], [..<object>..], [..<preposition>..], ..<verbphrase>..;
 `;
 
 export default latinGrammar;

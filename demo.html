@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Lingua Latina Parser</title>
+    <script src="build/lingualatina-bundle.js"></script>
+</head>
+<body>
+    <h1>Latin Parser</h1>
+    <input id="input" type="text">
+    <button id="parse">Parse</button>
+    Results: <span class="results"></span>
+    <button id="nextparse">next parse</button>
+    <button id="previousparse">previous parse</button>
+    <button id="nextsentence">next sentence</button>
+    <button id="previoussentence">previous sentence</button>
+
+    <div id="parseresult">
+        Try parsing something above!
+    </div>
+
+
+    <script>
+        window.parseResult = null;
+        const parseButton = document.getElementById('parse');
+        parseButton.addEventListener('click', async function () {
+            parseButton.disabled = true;
+            const input = document.getElementById('input').value;
+            const result = await window.parser.parse(input);
+            parseButton.disabled = false;
+            console.log(result);
+            window.parseResult = result;
+            if (result.length > 0 && result[0].length > 0) {
+                document.getElementById('parseresult').innerHTML = generateTable(result[0][0]);
+            } else {
+                document.getElementById('parseresult').innerHTML = 'No result';
+            }
+        });
+        function generateTable(data) {
+            const stack = data.stack;
+            const columns = [];
+
+            // List of names to exclude
+            const excludeNames = ['....', '[]', '{}'];
+
+            // Extract words and build columns
+            stack.forEach((item) => {
+                const column = [];
+                // Get the word from the node's children
+                const word = item.node.children[0][0].name;
+                column.push(word);
+
+                // Get the node name if it's not excluded
+                if (!excludeNames.includes(item.node.name)) {
+                    column.push(item.node.name);
+                }
+
+                // Keep track of previous name to filter duplicates
+                let prevName = item.node.name;
+
+                // Get the parents' names, excluding duplicates and excluded names
+                item.parents.forEach((parent) => {
+                    const name = parent.name;
+                    if (
+                        !excludeNames.includes(name) &&
+                        name !== prevName
+                    ) {
+                        column.push(name);
+                        prevName = name;
+                    }
+                });
+
+                columns.push(column);
+            });
+
+            // Determine the maximum column height
+            const maxRows = Math.max(...columns.map((col) => col.length));
+
+            // Normalize columns to have the same number of rows
+            columns.forEach((col) => {
+                while (col.length < maxRows) {
+                    col.push('');
+                }
+            });
+
+            // Build rows
+            const rows = [];
+            for (let i = 0; i < maxRows; i++) {
+                const row = columns.map((col) => col[i]);
+                rows.push(row);
+            }
+
+            // Remove duplicate cells vertically
+            for (let colIndex = 0; colIndex < columns.length; colIndex++) {
+                let prevCell = null;
+                for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
+                    const cell = rows[rowIndex][colIndex];
+                    if (cell === prevCell) {
+                        rows[rowIndex][colIndex] = '';
+                    } else {
+                        prevCell = cell;
+                    }
+                }
+            }
+
+            // Merge cells horizontally where appropriate
+            const mergedRows = [];
+            for (let i = 0; i < rows.length; i++) {
+                const row = [];
+                let j = 0;
+                while (j < rows[i].length) {
+                    const cellText = rows[i][j];
+                    let colspan = 1;
+                    while (
+                        j + colspan < rows[i].length &&
+                        rows[i][j + colspan] === ''
+                        ) {
+                        colspan++;
+                    }
+                    row.push({
+                        text: cellText,
+                        colspan: colspan > 1 ? colspan : undefined,
+                    });
+                    j += colspan;
+                }
+                mergedRows.push(row);
+            }
+
+            // Generate HTML
+            let html = '<table>\n  <thead>\n    <tr>';
+            // Header row with words
+            columns.forEach((col) => {
+                html += `<th>${col[0]}</th>`;
+            });
+            html += '</tr>\n  </thead>\n  <tbody>';
+
+            // Data rows
+            for (let i = 1; i < mergedRows.length; i++) {
+                // Check if the entire row is empty
+                const isEmptyRow = mergedRows[i].every((cell) => cell.text === '');
+                if (isEmptyRow) continue; // Skip empty rows
+
+                html += '\n    <tr>';
+                mergedRows[i].forEach((cell) => {
+                    if (cell.text !== '') {
+                        if (cell.colspan) {
+                            html += `<td colspan="${cell.colspan}">${cell.text}</td>`;
+                        } else {
+                            html += `<td>${cell.text}</td>`;
+                        }
+                    } else if (!cell.colspan) {
+                        html += '<td></td>';
+                    }
+                });
+                html += '</tr>';
+            }
+
+            html += '\n  </tbody>\n</table>';
+            return html;
+        }
+
+    </script>
+</body>
+</html>

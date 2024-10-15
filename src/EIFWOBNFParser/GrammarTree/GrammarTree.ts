@@ -25,7 +25,9 @@ export default class GrammarTree {
         // We now have to waddle through the remaining nodes and try to find a match
         // from the anywhere nodes
         const allParsed = this.parseAnywhereNodes(matches);
-        return allParsed.map(match => this.putInOrder(input, match.stacktrace));
+        return allParsed
+            .filter(match => match.remaining.length === 0)
+            .map(match => this.putInOrder(input, match.stacktrace));
     }
 
     /**
@@ -55,7 +57,7 @@ export default class GrammarTree {
      * @private
      */
     private parseAnywhereNodes(matches: GTMatchResult[]) {
-        const requirementQueue = matches;
+        const requirementQueue = matches.slice(0);
         const optionalQueue = new Array<GTMatchResult>();
         const repeatableQueue = new Array<GTMatchResult>();
 
@@ -101,6 +103,7 @@ export default class GrammarTree {
                         anywhereMatch.anywhere.optionals.push(...match.anywhere.optionals)
                         anywhereMatch.anywhere.optionals.push(...anywhereMatch.anywhere.requirements);
                         anywhereMatch.anywhere.repeatables.push(...match.anywhere.repeatables);
+                        anywhereMatch.stacktrace.addAfter(match.stacktrace);
                         return anywhereMatch
                     }
                 ));
@@ -127,6 +130,7 @@ export default class GrammarTree {
                         anywhereMatch.anywhere.repeatables.push(...match.anywhere.repeatables);
                         anywhereMatch.anywhere.repeatables.push(...anywhereMatch.anywhere.requirements);
                         anywhereMatch.anywhere.repeatables.push(...anywhereMatch.anywhere.optionals);
+                        anywhereMatch.stacktrace.addAfter(match.stacktrace);
                         return anywhereMatch
                     }
                 ));

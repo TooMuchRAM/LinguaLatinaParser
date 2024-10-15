@@ -54,21 +54,21 @@ export default class LinguaLatinaParser {
                 if (lemmatised.length > 1) {
                     const slice = children.slice(0);
                     for (let i = 1; i<lemmatised.length; i++) {
-                        children.push(...structuredClone(slice));
+                        children.push(...slice.map(seq => seq.slice(0)));
                     }
                 }
                 if (lemmatised.length > childrenLength) {
                     for(let i = 0; i<lemmatised.length; i++) {
                         for (let j = 0; j<childrenLength; j++) {
-                            const pushAt = j*(childrenLength-1) + i;
+                            const pushAt = i*(childrenLength) + j;
                             children[pushAt].push(...lemmatised[i]);
                         }
                     }
                 } else {
-                    for (let i = 0; i < childrenLength; i++) {
-                        for (let j = 0; j < lemmatised.length; j++) {
-                            const pushAt = j*(childrenLength-1) + i;
-                            children[pushAt].push(...lemmatised[j]);
+                    for(let i = 0; i<lemmatised.length; i++) {
+                        for (let j = 0; j<childrenLength; j++) {
+                            const pushAt = i*(childrenLength) + j;
+                            children[pushAt].push(...lemmatised[i]);
                         }
                     }
                 }
