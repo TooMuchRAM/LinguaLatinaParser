@@ -13,8 +13,7 @@ EIFWOBNF {
     ConstructRepeat = "{" Conjunction "}"
     ConstructOptional = "[" Conjunction "]"
     ConstructAnywhere = ".." Conjunction ".."
-    Term = NonTerminal | AffixNonTerminal | Terminal | anythingSelector
-    anythingSelector = "..."
+    Term = NonTerminal | AffixNonTerminal | Terminal
     AnyNonTerminal = NonTerminal | AffixNonTerminal
     NonTerminal = #("<" name ">")
     AffixNonTerminal = #("<" name "(") AffixParam ("," AffixParam)* ")>"
