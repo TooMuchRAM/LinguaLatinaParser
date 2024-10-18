@@ -3,162 +3,326 @@
 <head>
     <meta charset="UTF-8">
     <title>Lingua Latina Parser</title>
+    <!-- Include D3.js -->
+    <script src="https://d3js.org/d3.v6.min.js"></script>
     <script src="build/lingualatina-bundle.js"></script>
+    <style>
+        /* Basic styles for the tree */
+        .node circle {
+            fill: #fff;
+            stroke: steelblue;
+            stroke-width: 2px;
+        }
+        .node text {
+            font: 12px sans-serif;
+        }
+        .link {
+            fill: none;
+            stroke: #ccc;
+            stroke-width: 2px;
+        }
+        /* Style for disabled buttons */
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        /* Flex container for buttons and results */
+        .controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        /* Parseresult styling */
+        #parseresult {
+            margin-top: 20px;
+            overflow: auto;
+            border: 1px solid #ddd;
+            padding: 10px;
+            width: 100%; /* Fixed width */
+            height: 600px; /* Fixed height */
+            position: relative;
+            box-sizing: border-box;
+        }
+        /* Responsive SVG container */
+        svg {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
 </head>
 <body>
-    <h1>Latin Parser</h1>
-    <input id="input" type="text">
-    <button id="parse">Parse</button>
-    Results: <span class="results"></span>
-    <button id="nextparse">next parse</button>
-    <button id="previousparse">previous parse</button>
-    <button id="nextsentence">next sentence</button>
-    <button id="previoussentence">previous sentence</button>
+<h1>Latin Parser</h1>
+<input id="input" type="text" placeholder="Enter a Latin sentence">
+<button id="parse">Parse</button>
 
-    <div id="parseresult">
-        Try parsing something above!
-    </div>
+<!-- Controls container for results and navigation buttons -->
+<div class="controls">
+    <span class="results">No parse loaded.</span>
+    <button id="previoussentence" disabled>Previous Sentence</button>
+    <button id="nextsentence" disabled>Next Sentence</button>
+    <button id="previousparse" disabled>Previous Parse</button>
+    <button id="nextparse" disabled>Next Parse</button>
+</div>
 
+<div id="parseresult">
+    <svg id="tree-container" width="1000" height="600"></svg>
+</div>
 
-    <script>
-        window.parseResult = null;
-        const parseButton = document.getElementById('parse');
-        parseButton.addEventListener('click', async function () {
-            parseButton.disabled = true;
-            const input = document.getElementById('input').value;
-            const result = await window.parser.parse(input);
+<script>
+    window.parseResult = null;
+    let currentSentenceIndex = 0;
+    let currentParseIndex = 0;
+
+    const parseButton = document.getElementById('parse');
+    const previousParseButton = document.getElementById('previousparse');
+    const nextParseButton = document.getElementById('nextparse');
+    const previousSentenceButton = document.getElementById('previoussentence');
+    const nextSentenceButton = document.getElementById('nextsentence');
+    const resultsSpan = document.querySelector('.results');
+    const parseresultDiv = document.getElementById('parseresult');
+
+    parseButton.addEventListener('click', async function () {
+        parseButton.disabled = true;
+        const input = document.getElementById('input').value.trim();
+        if (input === "") {
+            alert("Please enter a Latin sentence.");
             parseButton.disabled = false;
+            return;
+        }
+        try {
+            const result = await window.parser.parse(input);
             console.log(result);
             window.parseResult = result;
-            if (result.length > 0 && result[0].length > 0) {
-                document.getElementById('parseresult').innerHTML = generateTable(result[0][0]);
-            } else {
-                document.getElementById('parseresult').innerHTML = 'No result';
-            }
-        });
-        function generateTable(data) {
-            const stack = data.stack;
-            const columns = [];
+            currentSentenceIndex = 0;
+            currentParseIndex = 0;
+            updateNavigationButtons();
+            renderCurrentParse();
+        } catch (error) {
+            alert("An error occurred during parsing. Please try again.");
+            console.error(error);
+        }
+        parseButton.disabled = false;
+    });
 
-            // List of names to exclude
-            const excludeNames = ['....', '[]', '{}'];
+    // Navigation Buttons Event Listeners
+    nextParseButton.addEventListener('click', function() {
+        if (!window.parseResult) return;
+        const totalParses = window.parseResult[currentSentenceIndex].length;
+        if (currentParseIndex < totalParses - 1) {
+            currentParseIndex++;
+            renderCurrentParse();
+            updateNavigationButtons();
+        }
+    });
 
-            // Extract words and build columns
-            stack.forEach((item) => {
-                const column = [];
-                // Get the word from the node's children
-                const word = item.node.children[0][0].name;
-                column.push(word);
+    previousParseButton.addEventListener('click', function() {
+        if (!window.parseResult) return;
+        if (currentParseIndex > 0) {
+            currentParseIndex--;
+            renderCurrentParse();
+            updateNavigationButtons();
+        }
+    });
 
-                // Get the node name if it's not excluded
-                if (!excludeNames.includes(item.node.name)) {
-                    column.push(item.node.name);
-                }
+    nextSentenceButton.addEventListener('click', function() {
+        if (!window.parseResult) return;
+        const totalSentences = window.parseResult.length;
+        if (currentSentenceIndex < totalSentences - 1) {
+            currentSentenceIndex++;
+            currentParseIndex = 0; // Reset parse index
+            renderCurrentParse();
+            updateNavigationButtons();
+        }
+    });
 
-                // Keep track of previous name to filter duplicates
-                let prevName = item.node.name;
+    previousSentenceButton.addEventListener('click', function() {
+        if (!window.parseResult) return;
+        if (currentSentenceIndex > 0) {
+            currentSentenceIndex--;
+            currentParseIndex = 0; // Reset parse index
+            renderCurrentParse();
+            updateNavigationButtons();
+        }
+    });
 
-                // Get the parents' names, excluding duplicates and excluded names
-                item.parents.forEach((parent) => {
-                    const name = parent.name;
-                    if (
-                        !excludeNames.includes(name) &&
-                        name !== prevName
-                    ) {
-                        column.push(name);
-                        prevName = name;
-                    }
-                });
-
-                columns.push(column);
-            });
-
-            // Determine the maximum column height
-            const maxRows = Math.max(...columns.map((col) => col.length));
-
-            // Normalize columns to have the same number of rows
-            columns.forEach((col) => {
-                while (col.length < maxRows) {
-                    col.push('');
-                }
-            });
-
-            // Build rows
-            const rows = [];
-            for (let i = 0; i < maxRows; i++) {
-                const row = columns.map((col) => col[i]);
-                rows.push(row);
-            }
-
-            // Remove duplicate cells vertically
-            for (let colIndex = 0; colIndex < columns.length; colIndex++) {
-                let prevCell = null;
-                for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
-                    const cell = rows[rowIndex][colIndex];
-                    if (cell === prevCell) {
-                        rows[rowIndex][colIndex] = '';
-                    } else {
-                        prevCell = cell;
-                    }
-                }
-            }
-
-            // Merge cells horizontally where appropriate
-            const mergedRows = [];
-            for (let i = 0; i < rows.length; i++) {
-                const row = [];
-                let j = 0;
-                while (j < rows[i].length) {
-                    const cellText = rows[i][j];
-                    let colspan = 1;
-                    while (
-                        j + colspan < rows[i].length &&
-                        rows[i][j + colspan] === ''
-                        ) {
-                        colspan++;
-                    }
-                    row.push({
-                        text: cellText,
-                        colspan: colspan > 1 ? colspan : undefined,
-                    });
-                    j += colspan;
-                }
-                mergedRows.push(row);
-            }
-
-            // Generate HTML
-            let html = '<table>\n  <thead>\n    <tr>';
-            // Header row with words
-            columns.forEach((col) => {
-                html += `<th>${col[0]}</th>`;
-            });
-            html += '</tr>\n  </thead>\n  <tbody>';
-
-            // Data rows
-            for (let i = 1; i < mergedRows.length; i++) {
-                // Check if the entire row is empty
-                const isEmptyRow = mergedRows[i].every((cell) => cell.text === '');
-                if (isEmptyRow) continue; // Skip empty rows
-
-                html += '\n    <tr>';
-                mergedRows[i].forEach((cell) => {
-                    if (cell.text !== '') {
-                        if (cell.colspan) {
-                            html += `<td colspan="${cell.colspan}">${cell.text}</td>`;
-                        } else {
-                            html += `<td>${cell.text}</td>`;
-                        }
-                    } else if (!cell.colspan) {
-                        html += '<td></td>';
-                    }
-                });
-                html += '</tr>';
-            }
-
-            html += '\n  </tbody>\n</table>';
-            return html;
+    // Function to update the state of navigation buttons
+    function updateNavigationButtons() {
+        if (!window.parseResult) {
+            previousParseButton.disabled = true;
+            nextParseButton.disabled = true;
+            previousSentenceButton.disabled = true;
+            nextSentenceButton.disabled = true;
+            resultsSpan.textContent = 'No parse loaded.';
+            return;
         }
 
-    </script>
+        const totalSentences = window.parseResult.length;
+        const totalParses = window.parseResult[currentSentenceIndex].length;
+
+        // Update Parse Buttons
+        previousParseButton.disabled = currentParseIndex === 0;
+        nextParseButton.disabled = currentParseIndex >= totalParses - 1;
+
+        // Update Sentence Buttons
+        previousSentenceButton.disabled = currentSentenceIndex === 0;
+        nextSentenceButton.disabled = currentSentenceIndex >= totalSentences - 1;
+
+        // Update Results Span
+        resultsSpan.textContent = `Sentence ${currentSentenceIndex + 1} of ${totalSentences}, Parse ${currentParseIndex + 1} of ${totalParses}`;
+    }
+
+    // Function to render the current parse
+    function renderCurrentParse() {
+        const result = window.parseResult;
+        if (!result || result.length === 0) {
+            parseresultDiv.innerHTML = 'No result';
+            resultsSpan.textContent = 'No parse loaded.';
+            return;
+        }
+        const sentences = result;
+        if (currentSentenceIndex < 0) currentSentenceIndex = 0;
+        if (currentSentenceIndex >= sentences.length) currentSentenceIndex = sentences.length - 1;
+        const parses = sentences[currentSentenceIndex];
+        if (parses.length === 0) {
+            d3.select('#tree-container').html('');
+            resultsSpan.textContent = `Sentence ${currentSentenceIndex + 1} of ${sentences.length}, No parses available.`;
+            return;
+        }
+        if (currentParseIndex < 0) currentParseIndex = 0;
+        if (currentParseIndex >= parses.length) currentParseIndex = parses.length - 1;
+        const parse = parses[currentParseIndex];
+        const treeData = buildTreeData(parse);
+        renderTree(treeData);
+        updateNavigationButtons();
+    }
+
+    function buildTreeData(data) {
+        // Build a map of nodes by identifier
+        const nodeMap = new Map();
+
+        // Function to create node entries
+        function createNode(stackEntry) {
+            const node = stackEntry.node;
+            if (!node || !node.name || nodeMap.has(node.identifier)) {
+                return nodeMap.get(node.identifier);
+            }
+            const newNode = {
+                name: node.name,
+                children: []
+            };
+            nodeMap.set(node.identifier, newNode);
+
+            // Process parents
+            if (stackEntry.parents && stackEntry.parents.length > 0) {
+                for(let i = 0; i < stackEntry.parents.length; i++) {
+                    const parent = stackEntry.parents[i];
+                    // Since parents may not have full details, fetch from nodeMap or create a placeholder
+                    let parentNode = nodeMap.get(parent.identifier);
+                    if (!parentNode) {
+                        parentNode = {
+                            name: parent.name,
+                            identifier: parent.identifier,
+                            children: new Set()
+                        };
+                        nodeMap.set(parent.identifier, parentNode);
+                    }
+                    if (i === 0) {
+                        parentNode.children.add(newNode);
+                    } else {
+                        // Add the node as a child of the parent
+                        const lastParent = stackEntry.parents[i-1];
+                        const lastParentNode = nodeMap.get(lastParent.identifier);
+                        if (lastParentNode) {
+                            parentNode.children.add(lastParentNode);
+                        }
+                    }
+                    if (i === stackEntry.parents.length-1) {
+                        // If this is the last parent, add to roots
+                        roots.add(parentNode);
+                    }
+                }
+            } else {
+                // If no parents, this is a root node
+                roots.add(newNode);
+            }
+
+            return newNode;
+        }
+
+        // Start building the tree from the stack nodes
+        const roots = new Set();
+        data.stack.forEach(item => {
+            const node = createNode(item);
+            // Add the word as a child
+            if (item.node.children && item.node.children.length > 0) {
+                const wordNode = item.node.children[0][0];
+                if (wordNode) {
+                    const wordChild = {
+                        name: wordNode.name
+                    };
+                    node.children.push(wordChild);
+                }
+            }
+        });
+
+        // In case there are multiple roots, create a dummy root
+        let treeData;
+        if (roots.size === 1) {
+            treeData = Array.from(roots)[0];
+        } else {
+            /*treeData = {
+                name: 'Root',
+                children: Array.from(roots)
+            };*/
+            treeData = Array.from(roots)[0];
+        }
+
+
+        return treeData;
+    }
+
+    function renderTree(treeData) {
+        // Clear previous tree
+        document.querySelector('#tree-container').innerHTML = '';
+
+        const svg = d3.select("#tree-container"),
+            width = +svg.attr("width"),
+            height = +svg.attr("height");
+
+        const g = svg.append("g").attr("transform", "translate(0,40)");  // Translate to give space at the top
+
+        const treeLayout = d3.tree().size([width, height - 160]);  // Adjust size for vertical layout
+
+        const root = d3.hierarchy(treeData, d => d.children);
+
+        treeLayout(root);
+
+        // Links
+        g.selectAll(".link")
+            .data(root.links())
+            .enter().append("path")
+            .attr("class", "link")
+            .attr("d", d3.linkVertical()  // Use vertical links instead of horizontal
+                .x(d => d.x)
+                .y(d => d.y));
+
+        // Nodes
+        const node = g.selectAll(".node")
+            .data(root.descendants())
+            .enter().append("g")
+            .attr("class", d => "node" + (d.children ? " node--internal" : " node--leaf"))
+            .attr("transform", d => `translate(${d.x},${d.y})`);  // Flip coordinates for vertical layout
+
+        node.append("circle")
+            .attr("r", 5);
+
+        node.append("text")
+            .attr("dy", -10)  // Adjust text position for vertical layout
+            .attr("x", 0)
+            .style("text-anchor", "middle")
+            .text(d => d.data.name);
+    }
+</script>
 </body>
 </html>

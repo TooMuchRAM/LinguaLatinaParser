@@ -1,22 +1,31 @@
 import GTNode from "./GTNode";
 
+export interface GTSTParent {
+    identifier: string;
+    name: string;
+}
+
+export interface GTSTEntry<T extends GTNode> {
+    node: T;
+    parents: GTSTParent[];
+}
+
 export default class GTStackTrace {
 
-    public stack: {
-        node: GTNode,
-        parents: GTNode[]
-    }[] = [];
+    public stack: GTSTEntry<GTNode>[] = [];
 
-    public push(node: GTNode, parent: GTNode): void {
+    public push(node: GTNode): void {
         this.stack.push({
             node,
-            parents: [parent]
+            parents: []
         });
     }
 
-    public addParent(node: GTNode) {
+    public addParent(parent: GTSTParent) {
         for(const entry of this.stack) {
-            entry.parents.push(node);
+            if (entry.parents.length === 0 || entry.parents[entry.parents.length - 1].identifier !== parent.identifier) {
+                entry.parents.push(parent);
+            }
         }
     }
 
@@ -32,13 +41,20 @@ export default class GTStackTrace {
         }
     }
 
-    public pop(): void {
-        this.stack.pop();
+    public removeDuplicateParents() {
+        // for(let i = 0; i < this.stack.length; i++) {
+        //     const entry = this.stack[i];
+        //     entry.parents = entry.parents.filter((parent, index) => {
+        //         if (index > 0) {
+        //             return entry.parents[index - 1].identifier !== parent.identifier;
+        //         } else {
+        //             return true;
+        //         }
+        //     });
+        // }
     }
 
     public toString(): string {
-        return this.stack.map((entry) => {
-            return `${entry.node.name}(${entry.parents.map((parent) => parent.name).join(", ")})`;
-        }).join(" -> ");
+        return this.stack.map(entry => entry.node.toString()).join(" -> ");
     }
 }

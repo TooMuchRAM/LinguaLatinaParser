@@ -22,7 +22,7 @@ export default class GTAnywhereNode extends GTConstructNode {
         const matchResult = new GTMatchResult({
             remaining: input.slice(0)
         });
-        matchResult.anywhere.requirements.push(this);
+        matchResult.anywhere.requirements.push({node: this, parents: []});
         return [
             matchResult
         ];

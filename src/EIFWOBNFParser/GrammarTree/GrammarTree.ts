@@ -27,7 +27,11 @@ export default class GrammarTree {
         const allParsed = this.parseAnywhereNodes(matches);
         return allParsed
             .filter(match => match.remaining.length === 0)
-            .map(match => this.putInOrder(input, match.stacktrace));
+            .map(match => this.putInOrder(input, match.stacktrace))
+            .map(stacktrace => {
+                stacktrace.removeDuplicateParents();
+                return stacktrace;
+            });
     }
 
     /**
@@ -60,84 +64,97 @@ export default class GrammarTree {
         const requirementQueue = matches.slice(0);
         const optionalQueue = new Array<GTMatchResult>();
         const repeatableQueue = new Array<GTMatchResult>();
-
         const finalMatches = new Array<GTMatchResult>();
 
-        while (requirementQueue.length > 0) {
-            const match = requirementQueue.shift()!;
-            const remaining = match.remaining;
-            if (match.remaining.length === 0) {
-                finalMatches.push(match);
-                continue;
-            }
-            if (match.anywhere.requirements.length === 0) {
-                optionalQueue.push(match);
-                continue;
-            }
-            const anywhereNode = match.anywhere.requirements.shift()!;
-            const anywhereMatches = anywhereNode.matchChildrenAnywhere(remaining);
+        this.runQueue({
+            queue: requirementQueue,
+            nextQueue: optionalQueue,
+            finalMatches,
+            anywhereQueueName: "requirements"
+        }, (entry) => {
+            const {node: anywhereNode, parents} = entry.anywhere.requirements.shift()!;
+            const anywhereMatches = anywhereNode.matchChildrenAnywhere(entry.remaining);
             requirementQueue.push(...anywhereMatches.map(anywhereMatch => {
-                    anywhereMatch.transfer(match);
-                    return anywhereMatch
-                }
-            ));
-        }
+                        anywhereMatch.addParents(parents, true);
+                        anywhereMatch.transfer(entry);
+                        return anywhereMatch
+                    }
+                )
+            );
+        });
 
-        while (optionalQueue.length > 0) {
-            const match = optionalQueue.shift()!;
-            const remaining = match.remaining;
-            if (match.remaining.length === 0) {
-                finalMatches.push(match);
-                continue;
-            }
-            if (match.anywhere.optionals.length === 0) {
-                repeatableQueue.push(match);
-                continue;
-            }
-            const anywhereNode = match.anywhere.optionals.shift()!;
-            const anywhereMatches = anywhereNode.matchChildrenAnywhere(remaining);
+        this.runQueue({
+            queue: optionalQueue,
+            nextQueue: repeatableQueue,
+            finalMatches,
+            anywhereQueueName: "optionals"
+        }, (entry) => {
+            const {node: anywhereNode, parents} = entry.anywhere.optionals.shift()!;
+            const anywhereMatches = anywhereNode.matchChildrenAnywhere(entry.remaining);
             if (anywhereMatches.length === 0) {
-                optionalQueue.push(match);
+                optionalQueue.push(entry);
             } else {
                 optionalQueue.push(...anywhereMatches.map(anywhereMatch => {
-                        anywhereMatch.anywhere.optionals.push(...match.anywhere.optionals)
-                        anywhereMatch.anywhere.optionals.push(...anywhereMatch.anywhere.requirements);
-                        anywhereMatch.anywhere.repeatables.push(...match.anywhere.repeatables);
-                        anywhereMatch.stacktrace.addAfter(match.stacktrace);
-                        return anywhereMatch
-                    }
-                ));
+                            anywhereMatch.addParents(parents, true);
+                            anywhereMatch.anywhere.optionals.push(...entry.anywhere.optionals)
+                            anywhereMatch.anywhere.optionals.push(...anywhereMatch.anywhere.requirements);
+                            anywhereMatch.anywhere.repeatables.push(...entry.anywhere.repeatables);
+                            anywhereMatch.transferStacktrace(entry);
+                            return anywhereMatch
+                        }
+                    )
+                );
             }
-        }
+        });
 
-        while (repeatableQueue.length > 0) {
-            const match = repeatableQueue.shift()!;
-            const remaining = match.remaining;
-            if (match.remaining.length === 0) {
-                finalMatches.push(match);
-                continue;
-            }
-            if (match.anywhere.repeatables.length === 0) {
-                continue;
-            }
-            const anywhereNode = match.anywhere.repeatables.shift()!;
-            const anywhereMatches = anywhereNode.matchChildrenAnywhere(remaining);
+        this.runQueue({
+            queue: repeatableQueue,
+            nextQueue: null,
+            finalMatches,
+            anywhereQueueName: "repeatables"
+        }, (entry) => {
+            const {node: anywhereNode, parents} = entry.anywhere.repeatables.shift()!;
+            const anywhereMatches = anywhereNode.matchChildrenAnywhere(entry.remaining);
             if (anywhereMatches.length === 0) {
-                repeatableQueue.push(match);
+                repeatableQueue.push(entry);
             } else {
                 repeatableQueue.push(...anywhereMatches.map(anywhereMatch => {
-                        anywhereMatch.anywhere.repeatables.push(anywhereNode);
-                        anywhereMatch.anywhere.repeatables.push(...match.anywhere.repeatables);
-                        anywhereMatch.anywhere.repeatables.push(...anywhereMatch.anywhere.requirements);
-                        anywhereMatch.anywhere.repeatables.push(...anywhereMatch.anywhere.optionals);
-                        anywhereMatch.stacktrace.addAfter(match.stacktrace);
-                        return anywhereMatch
-                    }
-                ));
+                            anywhereMatch.addParents(parents, true);
+                            anywhereMatch.anywhere.repeatables.push({node: anywhereNode, parents});
+                            anywhereMatch.anywhere.repeatables.push(...entry.anywhere.repeatables);
+                            anywhereMatch.anywhere.repeatables.push(...anywhereMatch.anywhere.requirements);
+                            anywhereMatch.anywhere.repeatables.push(...anywhereMatch.anywhere.optionals);
+                            anywhereMatch.transferStacktrace(entry);
+                            return anywhereMatch
+                        }
+                    )
+                );
             }
-        }
-
+        });
         return finalMatches;
+    }
+
+    private runQueue(
+        {queue, nextQueue, finalMatches, anywhereQueueName}: {
+            queue: GTMatchResult[],
+            nextQueue: GTMatchResult[] | null,
+            finalMatches: GTMatchResult[],
+            anywhereQueueName: "requirements" | "optionals" | "repeatables"
+        },
+        processMatches: (queueEntry: GTMatchResult) => void
+    ) {
+        while (queue.length > 0) {
+            const entry = queue.shift()!;
+            if (entry.remaining.length === 0) {
+                finalMatches.push(entry);
+                continue;
+            }
+            if (entry.anywhere[anywhereQueueName].length === 0) {
+                nextQueue?.push(entry);
+                continue;
+            }
+            processMatches(entry);
+        }
     }
 }
 

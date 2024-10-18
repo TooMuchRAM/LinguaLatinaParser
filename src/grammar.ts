@@ -12,13 +12,15 @@ const latinGrammar = String.raw`
 <noun(<gender>, <number>, <case>)>;
 <adjective(<gender>, <number>, <case>)>;
 <verb(<person>, <number>, <tense>, <mood>, <voice>)>;
+<infinitive(<tense>, <voice>)>;
+
+<adverb>;
 
 <participium(<gender>, <number>, <case>)>;
 <gerund(<gender>, <number>, <case>)>;
 <gerundive(<gender>, <number>, <case>)>;
 
 <persnpron(<gender>, <number>, <case>)>;
-<reflxpron(<gender>, <number>, <case>)>;
 <demstpron(<gender>, <number>, <case>)>;
 <relatpron(<gender>, <number>, <case>)>;
 <indefpron(<gender>, <number>, <case>)>;
@@ -26,7 +28,6 @@ const latinGrammar = String.raw`
 <nounlike(<gender>, <number>, <case>)> ::=
 <noun(<gender>, <number>, <case>)>
 | <persnpron(<gender>, <number>, <case>)>
-| <reflxpron(<gender>, <number>, <case>)>
 | <demstpron(<gender>, <number>, <case>)>
 | <relatpron(<gender>, <number>, <case>)>
 | <indefpron(<gender>, <number>, <case>)>
@@ -74,7 +75,9 @@ const latinGrammar = String.raw`
 <object> ::= <nounphrase(<gender>, <number>, "accusative")>;
 <verbphrase> ::= <verb(<person>, <number>, <tense>, <mood>, <voice>)>;
 
-<sentence> ::= [..<subject>..], [..<object>..], [..<preposition>..], ..<verbphrase>..;
+<infinitiveclause> ::= <infinitive(<tense>, <voice>)>, [..<object>..];
+
+<sentence> ::= [..<subject>..], [..<object>..], {..<adverb>..}, [..<preposition>..], [..<infinitiveclause>..], ..<verbphrase>..;
 `;
 
 export default latinGrammar;

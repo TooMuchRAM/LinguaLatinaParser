@@ -2,6 +2,7 @@ import GTNodeChildren from "./GTNodeChildren";
 import OR from "./OR";
 import SEQ from "./SEQ";
 import GTMatchResult from "./GTMatchResult";
+import {GTSTParent} from "./GTStackTrace";
 
 export default class GTNode {
     public constructor(public readonly name: string) {
@@ -65,7 +66,7 @@ export default class GTNode {
             }
 
             if (node.name === match.remaining[0].name) {
-                match.stacktrace.push(match.remaining.shift()!, this);
+                match.stacktrace.push(match.remaining.shift()!);
                 queue.push({
                     seq,
                     seqIndex: seqIndex + 1,
@@ -85,8 +86,10 @@ export default class GTNode {
 
         }
 
+        const parent: GTSTParent = {name: this.name, identifier: crypto.randomUUID()};
+
         return matches.map(match => {
-            match.stacktrace.addParent(this);
+            match.addParent(parent);
             return match;
         });
 

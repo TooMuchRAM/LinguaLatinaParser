@@ -24,6 +24,7 @@ export enum MOODS {
     INDICATIVE = "indicative",
     SUBJUNCTIVE = "subjunctive",
     IMPERATIVE = "imperative",
+    INFINITIVE = "infinitive",
 }
 
 export enum VOICES {

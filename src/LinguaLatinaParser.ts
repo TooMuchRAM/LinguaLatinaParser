@@ -90,6 +90,11 @@ export default class LinguaLatinaParser {
                     // TODO: handle verbs with arguments (accusative, dative, genitive, etc.)
                     // TODO: handle esse
                     // TODO: handle infinitives
+                    if (output.inflection["mood"] === "infinitive") {
+                        return new GTNode(
+                            `infinitive"${output.inflection["tense"]}""${output.inflection["voice"]}"`
+                        );
+                    }
                     return new GTNode(
                         `verb"${output.inflection["pers"]}""${output.inflection["num"]}""${output.inflection["tense"]}""${output.inflection["mood"]}""${output.inflection["voice"]}"`
                     );
@@ -108,6 +113,26 @@ export default class LinguaLatinaParser {
                     return new GTNode(output.lemma);
                 case "pronoun":
                     // TODO: properly research how pronouns are used in Latin
+                    if (["pron1", "pron2", "pron3"].includes(output.inflection["stemtype"])) {
+                        return new GTNode(
+                            `persnpronoun"${output.inflection["gend"]}""${output.inflection["num"]}""${output.inflection["case"]}"`
+                        );
+                    }
+                    if (output.inflection["stemtype"] === "demonstr") {
+                        return new GTNode(
+                            `demstpronoun"${output.inflection["gend"]}""${output.inflection["num"]}""${output.inflection["case"]}"`
+                        );
+                    }
+                    if (output.inflection["stemtype"] === "relative") {
+                        return new GTNode(
+                            `relatpronoun"${output.inflection["gend"]}""${output.inflection["num"]}""${output.inflection["case"]}"`
+                        );
+                    }
+                    if (output.inflection["stemtype"] === "indef") {
+                        return new GTNode(
+                            `indefpronoun"${output.inflection["gend"]}""${output.inflection["num"]}""${output.inflection["case"]}"`
+                        );
+                    }
                     // A case distinction is probably already possible, classifying pronouns as nouns and adjectives
                     return new GTNode("pronoun");
                 case "preposition":
