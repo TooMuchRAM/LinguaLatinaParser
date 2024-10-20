@@ -9,7 +9,6 @@ import {allPossibleCombinations} from "./utils";
 import GTRepeatableNode from "./GrammarTree/GTRepeatableNode";
 import GTOptionalNode from "./GrammarTree/GTOptionalNode";
 import GTAnywhereNode from "./GrammarTree/GTAnywhereNode";
-import GTAnythingNode from "./GrammarTree/GTAnythingNode";
 import {NonterminalNode, TerminalNode} from "ohm-js";
 import GTConstructNode from "./GrammarTree/GTConstructNode";
 
@@ -412,9 +411,5 @@ export default class ConstructGrammarTreeActions {
         self.leaves[value.sourceString].push(leaf);
 
         return self._newOrSeq(leaf);
-    }
-
-    anythingSelector(self: ConstructGrammarTreeActions, _: TerminalNode): GTNodeChildren {
-        return self._newOrSeq(new GTAnythingNode());
     }
 }

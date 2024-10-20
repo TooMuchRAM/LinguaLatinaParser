@@ -56,9 +56,6 @@ export default class EIFWOBNFParser {
             ConstructAnywhere(arg0, arg1, arg2) {
                 return actions.ConstructAnywhere(actions, arg0, arg1, arg2)
             },
-            anythingSelector(arg0) {
-                return actions.anythingSelector(actions, arg0)
-            },
             AnyNonTerminal(arg0) {
                 return actions.AnyNonTerminal(actions, arg0)
             },
