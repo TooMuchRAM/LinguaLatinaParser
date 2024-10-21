@@ -5,7 +5,7 @@ import OR from "./EIFWOBNFParser/GrammarTree/OR";
 import SEQ from "./EIFWOBNFParser/GrammarTree/SEQ";
 
 export interface PerseusLemmatiserOutput {
-    pos: "conjunction" | "exclamation" | "verb" | "adjective" | "noun" | "numeral" | "pronoun" | "preposition" | "adverb";
+    pos: "conjunction" | "exclamation" | "verb" | "verb participle" | "adjective" | "noun" | "numeral" | "pronoun" | "preposition" | "adverb";
     lemma: string;
     inflection: { [key: string]: string };
 }

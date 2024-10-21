@@ -100,9 +100,17 @@ export default class LinguaLatinaParser {
                         return new GTNode(
                             `infinitive"${output.inflection["tense"]}""${output.inflection["voice"]}"`
                         );
+                    } else if (output.inflection["mood"] === "gerundive") {
+                        return new GTNode(
+                            `gerundive"${output.inflection["gend"]}""${output.inflection["num"]}""${output.inflection["case"]}"`
+                        );
                     }
                     return new GTNode(
                         `verb"${output.inflection["pers"]}""${output.inflection["num"]}""${output.inflection["tense"]}""${output.inflection["mood"]}""${output.inflection["voice"]}"`
+                    );
+                case "verb participle":
+                    return new GTNode(
+                        `participium"${output.inflection["gend"]}""${output.inflection["num"]}""${output.inflection["case"]}"`
                     );
                 case "adjective":
                     // <adjective(<gender>, <number>, <case>)>;
