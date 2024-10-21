@@ -43,7 +43,8 @@ export default class LinguaLatinaParser {
     }
 
     private async lemmatise(sentence: string): Promise<GTNodeChildren> {
-        const tokens = this.tokenise(sentence);
+        const tokens = this.tokenise(sentence).flatMap(token => this.splitSuffix(token));
+
         let children = new OR<SEQ<GTNode>>();
         for (const token of tokens) {
             const lemmatised = await this.lemmatiser.lemmatise(token);
@@ -57,25 +58,30 @@ export default class LinguaLatinaParser {
                         children.push(...slice.map(seq => seq.slice(0)));
                     }
                 }
-                if (lemmatised.length > childrenLength) {
-                    for(let i = 0; i<lemmatised.length; i++) {
-                        for (let j = 0; j<childrenLength; j++) {
-                            const pushAt = i*(childrenLength) + j;
-                            children[pushAt].push(...lemmatised[i]);
-                        }
-                    }
-                } else {
-                    for(let i = 0; i<lemmatised.length; i++) {
-                        for (let j = 0; j<childrenLength; j++) {
-                            const pushAt = i*(childrenLength) + j;
-                            children[pushAt].push(...lemmatised[i]);
-                        }
+                for(let i = 0; i<lemmatised.length; i++) {
+                    for (let j = 0; j<childrenLength; j++) {
+                        const pushAt = i*(childrenLength) + j;
+                        children[pushAt].push(...lemmatised[i]);
                     }
                 }
 
             }
         }
         return children;
+    }
+
+    private splitSuffix(word: string): string[] {
+        if (word.substring(word.length-3) === "que") {
+            return ["et", word.substring(0, word.length-3)];
+        }
+        if (word.substring(word.length-2) === "ve") {
+            return ["vel", word.substring(0, word.length-2)];
+        }
+        if (word.substring(word.length-2) === "ne") {
+            return [word.substring(0, word.length-2)];
+        }
+        return [word];
+        // TODO: handle -cum, as it can also be part of a regular word (like "medicum", accusative of "medicus")
     }
 
     private perseusOutputToNode(output: PerseusLemmatiserOutput): GTNode {
