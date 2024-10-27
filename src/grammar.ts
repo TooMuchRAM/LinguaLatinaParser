@@ -61,15 +61,18 @@ const latinGrammar = String.raw`
 <sine>;
 <in>;
 <super>;
-<prepositionsacc> ::= (<ad> | <ante> | <apud>  | <inter>
+<prepositionclauseacc> ::= (<ad> | <ante> | <apud>  | <inter>
     | <iuxta> | <per> | <post> | <in> | <super>), 
     <nounphrase(<gender>, <number>, "accusative")>;
-<prepositionsabl> ::= (<a> | <ab> | <coram> | <cum> 
+<prepositionclauseabl> ::= (<a> | <ab> | <coram> | <cum> 
     | <de> | <e> | <ex> | <pre> | <pro> 
     | <sine> | <in> | <super>), 
     <nounphrase(<gender>, <number>, "ablative")>;
 
-<preposition> ::= <prepositionsacc> | <prepositionsabl>;
+<prepositionclause> ::= <prepositionclauseacc> | <prepositionclauseabl>;
+
+<adverbial> ::= <adverb> | <prepositionclause>
+| <nounphrase(<gender>, <number>, "ablative")>;
 
 <subject> ::= <nounphrase(<gender>, <number>, "nominative")>;
 <object> ::= <nounphrase(<gender>, <number>, "accusative")>;
@@ -77,7 +80,7 @@ const latinGrammar = String.raw`
 
 <infinitiveclause> ::= <infinitive(<tense>, <voice>)>, [..<object>..];
 
-<sentence> ::= [..<subject>..], [..<object>..], {..<adverb>..}, [..<preposition>..], [..<infinitiveclause>..], ..<verbphrase>..;
+<sentence> ::= [..<subject>..], [..<object>..], {..<adverbial>..}, [..<prepositionclause>..], [..<infinitiveclause>..], ..<verbphrase>..;
 `;
 
 export default latinGrammar;
